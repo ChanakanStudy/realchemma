@@ -1,4 +1,5 @@
-import { DB, P, ArtData } from '/src/core/config.js?v=2';
+import Phaser from 'phaser';
+import { DB, P, ArtData } from '../core/config.js';
 
 export default class WorldScene extends Phaser.Scene {
     constructor() { super('ChemmaScene'); }
