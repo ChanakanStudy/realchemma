@@ -4,83 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHEMMA - The Alchemist Academy</title>
-    
-    <!-- Scripts CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
+
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+Thai:wght@300;400;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="/src/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="game-container"></div>
-    
-    <!-- --- Main Menu UI --- -->
-    <div id="menuUI">
-        <div class="logo-container">
-            <h1 class="game-title">CHEMMA</h1>
-            <p class="game-subtitle">THE ALCHEMIST ACADEMY</p>
-        </div>
-        
-        <div class="start-prompt" onclick="enterGame()">
-            CLICK TO ENTER ACADEMY
-        </div>
-        
-        <div class="side-menu">
-            <div class="icon-btn">⚙️</div>
-            <div class="icon-btn">🏆</div>
-        </div>
-    </div>
-
-    <!-- --- Game HUD --- -->
-    <div id="gameHUD">
-        <div class="player-status">
-            <div class="avatar">🧙</div>
-            <div class="bars">
-                <div class="bar-bg"><div id="hpFill" class="hp-fill"></div></div>
-                <div class="bar-bg"><div id="mpFill" class="mp-fill"></div></div>
-            </div>
-            <div class="level-badge">1</div>
-        </div>
-        <div class="minimap-container">MINIMAP</div>
-        <div class="controls-hint">[WASD] เดิน | [F] โต้ตอบ</div>
-    </div>
-
-    <!-- --- Oracle Chat UI --- -->
-    <div id="chatUI" class="chat-container">
-        <div class="chat-header">
-            🧪 CHEMMA Lab Assistant
-            <button class="close-chat" onclick="closeChat()">×</button>
-        </div>
-        <div class="chat-box" id="chatHistory">
-            <!-- ข้อความต้อนรับ -->
-            <div class="message-row bot-row">
-                <div class="message bot-msg">สวัสดีนักเคมีหน้าใหม่! ยินดีต้อนรับสู่โลกของ CHEMMA มีอะไรให้ฉันช่วยไขข้อสงสัยเกี่ยวกับธาตุและโลกเคมีบ้างไหม? 😊</div>
-            </div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="chatInput" placeholder="พิมพ์ถามเกี่ยวกับวิชาเคมี..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button id="sendBtn" onclick="sendMessage()" title="ส่งข้อความ">🚀</button>
-        </div>
-    </div>
-
-    <!-- --- Battle UI Root --- -->
-    <div id="battle-root" style="display: none; position: absolute; top:0; left:0; width:100%; height:100%; z-index: 100;"></div>
-
-    <div id="flashScreen" class="white-flash"></div>
-
-    <!-- --- Main Entry Point (Native ESM) --- -->
-    <script type="module" src="/src/entry.js?v=2"></script>
-    
-    <style>
-        /* Custom scrollbar for inventory */
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; border-left: 2px solid #334155; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border: 2px solid #0f172a; }
-    </style>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
