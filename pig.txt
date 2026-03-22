@@ -1,4 +1,0 @@
-Hello world
-
-
-this is for AI-npc branch
