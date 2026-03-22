@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
     <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+Thai:wght@300;400;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="/src/index.css">
@@ -51,17 +52,20 @@
     </div>
 
     <!-- --- Oracle Chat UI --- -->
-    <div id="chatUI">
+    <div id="chatUI" class="chat-container">
         <div class="chat-header">
-            THE ORACLE STONE
+            🧪 CHEMMA Lab Assistant
             <button class="close-chat" onclick="closeChat()">×</button>
         </div>
-        <div class="chat-history" id="chatHistory">
-            <div class="chat-msg msg-oracle">ยินดีต้อนรับนักเรียนเจ้าแห่งศาสตร์เคมี... เจ้ามีคำถามใดจะถามศิลาปราชญ์หรือไม่?</div>
+        <div class="chat-box" id="chatHistory">
+            <!-- ข้อความต้อนรับ -->
+            <div class="message-row bot-row">
+                <div class="message bot-msg">สวัสดีนักเคมีหน้าใหม่! ยินดีต้อนรับสู่โลกของ CHEMMA มีอะไรให้ฉันช่วยไขข้อสงสัยเกี่ยวกับธาตุและโลกเคมีบ้างไหม? 😊</div>
+            </div>
         </div>
-        <div class="chat-input-area">
-            <input type="text" id="chatInput" class="chat-input" placeholder="ร่ายคำถามของคุณที่นี่..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button id="sendBtn" class="chat-btn" onclick="sendMessage()">ร่ายมนตร์</button>
+        <div class="input-area">
+            <input type="text" id="chatInput" placeholder="พิมพ์ถามเกี่ยวกับวิชาเคมี..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button id="sendBtn" onclick="sendMessage()" title="ส่งข้อความ">🚀</button>
         </div>
     </div>
 

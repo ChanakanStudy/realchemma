@@ -1,7 +1,10 @@
 import { callGeminiAPI } from '/src/api/client.js?v=2';
 
+let chatHistory = [];
+
 export function openChat() {
     window.inChat = true;
+    window.chatHistory = chatHistory;
     const chatUI = document.getElementById('chatUI');
     chatUI.style.display = 'flex';
 }
@@ -20,29 +23,44 @@ export async function sendMessage() {
     if (!text) return;
 
     // User Message
+    const userRow = document.createElement('div');
+    userRow.className = 'message-row user-row';
     const userMsg = document.createElement('div');
-    userMsg.className = 'chat-msg msg-user';
+    userMsg.className = 'message user-msg';
     userMsg.innerText = text;
-    history.appendChild(userMsg);
+    userRow.appendChild(userMsg);
+    history.appendChild(userRow);
     input.value = '';
 
     // Disable UI
     input.disabled = true;
     sendBtn.disabled = true;
-    const typing = document.createElement('div');
-    typing.className = 'chat-msg msg-oracle typing-indicator';
-    typing.innerText = 'กำลังรวบรวมพลังเวท...';
-    history.appendChild(typing);
+    
+    // Typing
+    const typingRow = document.createElement('div');
+    typingRow.className = 'message-row bot-row';
+    const typingMsg = document.createElement('div');
+    typingMsg.className = 'message bot-msg typing-indicator';
+    typingMsg.innerText = 'กำลังพินิจพิจารณาสูตรเคมี...';
+    typingRow.appendChild(typingMsg);
+    history.appendChild(typingRow);
     history.scrollTop = history.scrollHeight;
 
     const response = await callGeminiAPI(text);
 
     // Oracle Message
-    history.removeChild(typing);
+    history.removeChild(typingRow);
+    const botRow = document.createElement('div');
+    botRow.className = 'message-row bot-row';
     const oracleMsg = document.createElement('div');
-    oracleMsg.className = 'chat-msg msg-oracle';
+    oracleMsg.className = 'message bot-msg';
     oracleMsg.innerText = response;
-    history.appendChild(oracleMsg);
+    botRow.appendChild(oracleMsg);
+    history.appendChild(botRow);
+
+    // Store in chat history for context
+    chatHistory.push({ role: "user", content: text });
+    chatHistory.push({ role: "assistant", content: response });
 
     input.disabled = false;
     sendBtn.disabled = false;
