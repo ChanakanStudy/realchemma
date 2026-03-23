@@ -36,7 +36,7 @@ const ULTIMATES = [
 
 const MAX_TIME = 30;
 const MAX_PLAYER_HP = 300;
-const MAX_MONSTER_HP = 1500;
+const MAX_MONSTER_HP = 3000;
 
 function matchRecipe(crucible) {
   if (crucible.length === 0) return null;
@@ -56,9 +56,9 @@ function calculateQTEResult(progress) {
 }
 
 // ==========================================
-// 🎬 MAIN BATTLE COMPONENT (แทนที่ไฟล์ BattleScene.jsx เดิม)
+// 🎬 MAIN BATTLE COMPONENT
 // ==========================================
-export default function BattleScene({ onQuitBattle }) {
+export default function BattleApp({ onQuitBattle }) {
   const [phase, setPhase] = useState(1);
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
   const [turn, setTurn] = useState(1);
@@ -69,6 +69,9 @@ export default function BattleScene({ onQuitBattle }) {
   const [crucible, setCrucible] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [logs, setLogs] = useState(['AN ANCIENT HOMUNCULUS BLOCKS YOUR PATH!']);
+
+  // 🔒 Lock System
+  const [hasCastUltimate, setHasCastUltimate] = useState(false);
 
   // QTE Engine
   const [qte, setQte] = useState({ active: false, progress: 0, direction: 1, item: null });
@@ -92,6 +95,47 @@ export default function BattleScene({ onQuitBattle }) {
     addLog(reason);
   }, [addLog]);
 
+  // --- Logic Flow ---
+  const monsterTurn = useCallback(() => {
+    if (monsterHP <= 0) return;
+    setScreenShake('animate-[shake_0.2s_ease-in-out_infinite]');
+    setTimeout(() => setScreenShake(''), 500);
+
+    const dmg = Math.floor(Math.random() * 30) + 40;
+    addLog(`HOMUNCULUS STRIKES! YOU TOOK ${dmg} DMG.`);
+
+    setPlayerHP(prev => {
+      const nextHp = Math.max(0, prev - dmg);
+      if (nextHp <= 0) {
+        endGame(false, 'YOU HAVE FALLEN...');
+      } else {
+        setTimeout(() => {
+          setTurn(t => {
+            const nextTurn = t + 1;
+            addLog(`--- TURN ${nextTurn} BEGINS ---`);
+            return nextTurn;
+          });
+          setPhase(1); 
+          setTimeLeft(MAX_TIME);
+          setHasCastUltimate(false); // 🔓 Unlock Ultimate for new turn
+        }, 2000);
+      }
+      return nextHp;
+    });
+  }, [monsterHP, addLog, endGame]);
+
+  const handleNextPhase = useCallback(() => {
+    setCrucible([]);
+    if (phase === 1) {
+      setPhase(2); setTimeLeft(MAX_TIME); addLog('--- COMBAT PHASE ---');
+    } else if (phase === 2) {
+      setPhase(3); setTimeLeft(MAX_TIME); addLog('--- JUDGEMENT PHASE ---');
+    } else if (phase === 3) {
+      setPhase(4); addLog('THE BEAST PREPARES TO STRIKE!');
+      setTimeout(monsterTurn, 1500);
+    }
+  }, [phase, addLog, monsterTurn]);
+
   // Timer
   useEffect(() => {
     if (phase >= 4 || phase === 0 || qte.active || cinematicText !== null) return;
@@ -102,7 +146,7 @@ export default function BattleScene({ onQuitBattle }) {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [phase, qte.active, cinematicText]);
+  }, [phase, qte.active, cinematicText, handleNextPhase]);
 
   // QTE Loop
   const animateQTE = useCallback((time) => {
@@ -140,18 +184,6 @@ export default function BattleScene({ onQuitBattle }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  const handleNextPhase = useCallback(() => {
-    setCrucible([]);
-    if (phase === 1) {
-      setPhase(2); setTimeLeft(MAX_TIME); addLog('--- COMBAT PHASE ---');
-    } else if (phase === 2) {
-      setPhase(3); setTimeLeft(MAX_TIME); addLog('--- JUDGEMENT PHASE ---');
-    } else if (phase === 3) {
-      setPhase(4); addLog('THE BEAST PREPARES TO STRIKE!');
-      setTimeout(monsterTurn, 1500);
-    }
-  }, [phase, addLog]);
 
   const addElement = (el) => { if (crucible.length < 5) setCrucible([...crucible, el]); };
 
@@ -219,6 +251,9 @@ export default function BattleScene({ onQuitBattle }) {
 
   // 🎬 EPIC DYNAMIC ULTIMATE ANIMATION
   const executeUltimate = (ult) => {
+    if (hasCastUltimate) return;
+    setHasCastUltimate(true); // 🔒 Lock Ultimate
+
     setCinematicText({ name: ult.name, color: ult.color });
     setAttackEffect({ type: 'charge' });
     
@@ -237,31 +272,22 @@ export default function BattleScene({ onQuitBattle }) {
         setScreenShake('');
         setMonsterHP(prev => {
           const newHp = Math.max(0, prev - ult.dmg);
-          if (newHp <= 0) endGame(true, `TARGET DECIMATED BY ${ult.name}!`);
+          if (newHp <= 0) {
+            endGame(true, `TARGET DECIMATED BY ${ult.name}!`);
+          } else {
+            // ⏭️ กรณีบอสไม่ตาย ข้ามไปเทิร์นศัตรูทันที
+            setTimeout(() => {
+              setMonsterHit(false);
+              setAttackEffect(null);
+              setMonsterStatuses([]); 
+              addLog('STATUS EFFECTS DISSIPATED...');
+              handleNextPhase();
+            }, 1500);
+          }
           return newHp;
         });
       }, 2000);
     }, 1800); 
-  };
-
-  const monsterTurn = () => {
-    if (monsterHP <= 0) return;
-    setScreenShake('animate-[shake_0.2s_ease-in-out_infinite]');
-    setTimeout(() => setScreenShake(''), 500);
-
-    const dmg = Math.floor(Math.random() * 30) + 40;
-    setPlayerHP(prev => Math.max(0, prev - dmg));
-    addLog(`HOMUNCULUS STRIKES! YOU TOOK ${dmg} DMG.`);
-
-    if (playerHP - dmg <= 0) {
-      endGame(false, 'YOU HAVE FALLEN...');
-      return;
-    }
-    setTimeout(() => {
-      setTurn(prev => prev + 1);
-      setPhase(1); setTimeLeft(MAX_TIME);
-      addLog(`--- TURN ${turn + 1} BEGINS ---`);
-    }, 2000);
   };
 
   const restartGame = () => {
@@ -270,17 +296,19 @@ export default function BattleScene({ onQuitBattle }) {
     setInventory([]); setCrucible([]); setMonsterStatuses([]);
     setLogs(['THE BATTLE BEGINS ANEW!']); 
     setQteResult(null); setAttackEffect(null); setCinematicText(null);
+    setHasCastUltimate(false);
   };
 
-  // ดึงคลาสพื้นหลังแบบไดนามิกตามสถานะ
   const getDynamicBg = () => {
     if (attackEffect?.type === 'ult') return attackEffect.ultData.bgTheme;
     if (attackEffect?.type === 'charge') return 'bg-slate-950 brightness-50 grayscale';
     return 'bg-slate-950';
   };
 
+  const isAnyUltimateReady = ULTIMATES.some(ult => ult.req.every(r => monsterStatuses.includes(r)));
+
   return (
-    <div className={`relative w-full h-screen text-white font-hud overflow-hidden flex flex-col selection:bg-indigo-500/30 ${screenShake} ${getDynamicBg()} transition-all duration-1000`}>
+    <div className={`relative w-full h-[100dvh] max-w-full text-white font-hud overflow-hidden flex flex-col selection:bg-indigo-500/30 ${screenShake} ${getDynamicBg()} transition-all duration-1000`}>
       
       {/* 🎬 CINEMATIC TEXT OVERLAY */}
       {cinematicText && (
@@ -295,7 +323,7 @@ export default function BattleScene({ onQuitBattle }) {
       {/* =========================================
           TOP HALF: FIRST-PERSON BATTLEFIELD 
       ========================================= */}
-      <div className="relative flex-1 flex flex-col items-center justify-center border-b-8 border-slate-900 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+      <div className="relative flex-[0.55] w-full flex flex-col items-center justify-center border-b-8 border-slate-900 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)] min-h-0">
         
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `linear-gradient(335deg, rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(155deg, rgba(255,255,255,0.1) 1px, transparent 1px)`, backgroundSize: '60px 60px' }} />
         
@@ -304,7 +332,7 @@ export default function BattleScene({ onQuitBattle }) {
         )}
 
         {/* --- ENEMY HUD --- */}
-        <div className="relative z-20 flex flex-col items-center mt-[-10%] w-full max-w-2xl">
+        <div className="relative z-20 flex flex-col items-center mt-[-5%] w-full max-w-2xl">
           <div className="w-full px-8 mb-6">
             <div className="flex justify-between items-end mb-2 drop-shadow-[2px_2px_0_#000]">
               <span className="font-epic text-xl text-rose-500">HOMUNCULUS OMEGA</span>
@@ -402,11 +430,11 @@ export default function BattleScene({ onQuitBattle }) {
       {/* =========================================
           BOTTOM HALF: THE ALCHEMIST'S WORKBENCH 
       ========================================= */}
-      <div className="relative h-[45%] w-full bg-[#1e293b] border-t-8 border-slate-600 shadow-[inset_0_30px_30px_rgba(0,0,0,0.6)] z-20 flex flex-col">
+      <div className="relative flex-[0.45] w-full bg-[#1e293b] border-t-8 border-slate-600 shadow-[inset_0_30px_30px_rgba(0,0,0,0.6)] z-20 flex flex-col min-h-0">
         <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-multiply" style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)` }} />
 
         {/* --- WORKBENCH HUD --- */}
-        <div className="flex justify-between items-center px-8 py-3 bg-slate-900 border-b-4 border-slate-700 shadow-lg z-10">
+        <div className="flex justify-between items-center px-8 py-3 bg-slate-900 border-b-4 border-slate-700 shadow-lg z-10 shrink-0">
           <div className="flex gap-6 items-center">
              <div className="font-epic text-sm text-yellow-400 drop-shadow-[2px_2px_0_#000]">PHASE {phase}: {phase===1?'SYNTHESIS':phase===2?'ARSENAL':phase===3?'JUDGEMENT':phase===4?'DEFENSE':'END'}</div>
              <div className={`font-epic text-2xl ${timeLeft <= 5 ? 'text-red-500 animate-[pulse_0.2s_infinite]' : 'text-white'}`}>T-{timeLeft.toString().padStart(2, '0')}</div>
@@ -421,12 +449,12 @@ export default function BattleScene({ onQuitBattle }) {
         </div>
 
         {/* --- TABLETOP AREA --- */}
-        <div className="flex-1 flex p-5 gap-6 relative z-10">
+        <div className="flex-1 flex p-5 gap-6 relative z-10 min-h-0">
           
           {/* LEFT: The Cauldron */}
-          <div className="w-1/4 flex flex-col items-center justify-center bg-black/60 border-4 border-slate-600 rounded-xl p-4 shadow-[inset_6px_6px_0_rgba(0,0,0,0.8)]">
+          <div className="w-1/4 flex flex-col items-center justify-center bg-black/60 border-4 border-slate-600 rounded-xl p-4 shadow-[inset_6px_6px_0_rgba(0,0,0,0.8)] min-h-0">
             <div className="font-epic text-[10px] text-indigo-400 mb-2 tracking-widest">ARCANE CAULDRON</div>
-            <div className="relative w-28 h-28 mb-4">
+            <div className="relative w-28 h-28 mb-4 shrink-0">
                <svg viewBox="0 0 16 16" width="100%" height="100%" style={{shapeRendering: "crispEdges"}} className="drop-shadow-[0_15px_15px_rgba(0,0,0,0.9)]">
                   {crucible.length > 0 && <rect x="6" y="2" width="4" height="2" fill="#10b981" className="animate-[ping_1s_steps(2)_infinite]"/>}
                   <path d="M4,6 h8 v2 h2 v6 h-12 v-6 h2 z" fill="#0f172a" />
@@ -448,18 +476,18 @@ export default function BattleScene({ onQuitBattle }) {
           </div>
 
           {/* MIDDLE: Action Area */}
-          <div className="flex-[2] flex flex-col">
+          <div className="flex-[2] flex flex-col min-h-0">
             {phase === 1 && (
-              <div className="h-full flex flex-col">
-                <div className="flex justify-between items-center mb-4">
+              <div className="h-full flex flex-col min-h-0">
+                <div className="flex justify-between items-center mb-4 shrink-0">
                   <span className="font-epic text-sm text-yellow-300 drop-shadow-[2px_2px_0_#000]">SELECT RUNES</span>
                   <button onClick={handleNextPhase} className="px-5 py-3 bg-slate-800 border-2 border-slate-500 font-epic text-[10px] text-white hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0_#000] active:translate-y-1 active:shadow-none">FINISH PREP {'>'}</button>
                 </div>
-                <div className="flex-1 grid grid-cols-5 gap-3 place-items-center">
+                <div className="flex-1 grid grid-cols-5 gap-3 place-items-center overflow-y-auto min-h-0">
                   {ELEMENTS.map(el => (
                     <button 
                       key={el.symbol} onClick={() => addElement(el.symbol)}
-                      className="relative group w-[72px] h-[90px] bg-slate-900 border-4 border-slate-700 flex flex-col items-center justify-center shadow-[4px_4px_0_#000] active:translate-y-1 active:shadow-[0_0_0_#000] hover:border-white transition-colors overflow-hidden"
+                      className="relative group w-[72px] h-[90px] bg-slate-900 border-4 border-slate-700 flex flex-col items-center justify-center shadow-[4px_4px_0_#000] active:translate-y-1 active:shadow-[0_0_0_#000] hover:border-white transition-colors overflow-hidden shrink-0"
                       style={{ borderTopColor: el.color }}
                     >
                       <div className="absolute inset-0 opacity-10 group-hover:opacity-30" style={{backgroundColor: el.color}}></div>
@@ -472,12 +500,12 @@ export default function BattleScene({ onQuitBattle }) {
             )}
 
             {phase === 2 && (
-              <div className="h-full flex flex-col">
-                <div className="flex justify-between items-center mb-4">
+              <div className="h-full flex flex-col min-h-0">
+                <div className="flex justify-between items-center mb-4 shrink-0">
                   <span className="font-epic text-sm text-green-400 drop-shadow-[2px_2px_0_#000]">YOUR ARSENAL</span>
                   <button onClick={handleNextPhase} className="px-5 py-3 bg-red-900 border-2 border-red-500 font-epic text-[10px] text-white hover:bg-red-500 transition-colors shadow-[4px_4px_0_#000] active:translate-y-1 active:shadow-none">END COMBAT {'>'}</button>
                 </div>
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
                   {inventory.length === 0 ? (
                     <div className="h-full flex items-center justify-center font-epic text-slate-500">NO POTIONS BREWED</div>
                   ) : (
@@ -489,7 +517,7 @@ export default function BattleScene({ onQuitBattle }) {
                         >
                           <div className="font-epic text-[10px] text-white mb-3 truncate group-hover:text-yellow-300 drop-shadow-[1px_1px_0_#000]">{comp.name}</div>
                           <div className="flex gap-3 items-center">
-                             <div className="w-10 h-10 rounded-full border-2 border-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{backgroundColor: comp.color}}></div>
+                             <div className="w-10 h-10 rounded-full border-2 border-white shadow-[0_0_10px_rgba(255,255,255,0.5)] shrink-0" style={{backgroundColor: comp.color}}></div>
                              <div className="flex flex-col gap-1 w-full">
                                <div className="flex justify-between bg-black/80 px-2 py-1 border border-slate-700">
                                  <span className="font-hud text-xs text-slate-400">DMG</span>
@@ -511,23 +539,23 @@ export default function BattleScene({ onQuitBattle }) {
             )}
 
             {phase === 3 && (
-              <div className="h-full flex flex-col items-center bg-black/60 border-4 border-dashed border-purple-900/50 p-4">
-                <span className="font-epic text-sm text-purple-400 mb-4 drop-shadow-[2px_2px_0_#000] w-full text-left border-b border-purple-900 pb-2">JUDGEMENT PROTOCOLS</span>
-                <div className="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 pr-2">
+              <div className="h-full flex flex-col items-center bg-black/60 border-4 border-dashed border-purple-900/50 p-4 min-h-0">
+                <span className="font-epic text-sm text-purple-400 mb-4 drop-shadow-[2px_2px_0_#000] w-full text-left border-b border-purple-900 pb-2 shrink-0">JUDGEMENT PROTOCOLS</span>
+                <div className="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 pr-2 min-h-0">
                   {ULTIMATES.map(ult => {
                     const isReady = ult.req.every(r => monsterStatuses.includes(r));
                     return (
                       <button 
-                        key={ult.id} onClick={() => isReady && executeUltimate(ult)} disabled={!isReady}
-                        className={`w-full p-4 border-4 flex justify-between items-center transition-all ${isReady ? `border-white shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none hover:brightness-125 animate-[pulse_1.5s_infinite]` : 'bg-slate-900 border-slate-700 opacity-50 cursor-not-allowed'}`}
-                        style={isReady ? { backgroundColor: ult.color, color: '#000' } : {}}
+                        key={ult.id} onClick={() => isReady && executeUltimate(ult)} disabled={!isReady || hasCastUltimate}
+                        className={`w-full p-4 border-4 flex justify-between items-center transition-all shrink-0 ${isReady && !hasCastUltimate ? `border-white shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none hover:brightness-125 animate-[pulse_1.5s_infinite]` : 'bg-slate-900 border-slate-700 opacity-50 cursor-not-allowed'}`}
+                        style={isReady && !hasCastUltimate ? { backgroundColor: ult.color, color: '#000' } : {}}
                       >
                         <div className="flex flex-col text-left w-2/3">
-                           <span className={`font-epic text-xs ${isReady ? '' : 'text-slate-500'}`}>{ult.name}</span>
-                           <span className={`font-hud text-sm mt-2 font-bold ${isReady ? 'text-black/70' : 'text-slate-600'}`}>{ult.desc}</span>
+                           <span className={`font-epic text-xs ${isReady && !hasCastUltimate ? '' : 'text-slate-500'}`}>{ult.name}</span>
+                           <span className={`font-hud text-sm mt-2 font-bold ${isReady && !hasCastUltimate ? 'text-black/70' : 'text-slate-600'}`}>{ult.desc}</span>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                          <span className={`font-hud text-lg font-black px-2 py-1 border-2 ${isReady ? 'bg-black text-white border-white' : 'bg-transparent text-slate-500 border-slate-600'}`}>DMG: {ult.dmg}</span>
+                          <span className={`font-hud text-lg font-black px-2 py-1 border-2 ${isReady && !hasCastUltimate ? 'bg-black text-white border-white' : 'bg-transparent text-slate-500 border-slate-600'}`}>DMG: {ult.dmg}</span>
                           <div className="flex gap-1 flex-wrap justify-end">
                             {ult.req.map(r => (
                               <span key={r} className={`text-[8px] font-epic uppercase px-1 py-0.5 border ${monsterStatuses.includes(r) ? 'bg-green-500 border-white text-black' : 'bg-slate-800 border-slate-600 text-slate-500'}`}>{r}</span>
@@ -538,14 +566,17 @@ export default function BattleScene({ onQuitBattle }) {
                     )
                   })}
                 </div>
-                <button onClick={handleNextPhase} className="mt-4 w-full py-3 bg-slate-800 border-4 border-slate-600 font-epic text-xs text-white hover:bg-white hover:text-black shadow-[4px_4px_0_#000] active:translate-y-1 active:shadow-none">
-                  BRACE FOR IMPACT
+                
+                {/* ⏭️ SMART SKIP BUTTON */}
+                <button onClick={handleNextPhase} disabled={hasCastUltimate} className={`mt-4 w-full py-3 border-4 font-epic text-xs shrink-0 shadow-[4px_4px_0_#000] active:translate-y-1 active:shadow-none transition-colors ${hasCastUltimate ? 'bg-slate-800 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed' : 'bg-slate-800 border-slate-600 text-white hover:bg-white hover:text-black'}`}>
+                  {isAnyUltimateReady && !hasCastUltimate ? 'SKIP ULTIMATE & BRACE FOR IMPACT' : 'NO ULTIMATE READY - END TURN >'}
                 </button>
+
               </div>
             )}
 
             {phase >= 4 && (
-              <div className="h-full flex flex-col items-center justify-center">
+              <div className="h-full flex flex-col items-center justify-center min-h-0">
                 {phase === 4 ? (
                   <div className="font-epic text-3xl text-rose-500 animate-[ping_0.5s_steps(2)_infinite] drop-shadow-[4px_4px_0_#000]">ENEMY TURN!</div>
                 ) : (
@@ -553,10 +584,12 @@ export default function BattleScene({ onQuitBattle }) {
                     <div className={`font-epic text-5xl mb-8 drop-shadow-[6px_6px_0_#000] ${playerHP > 0 ? 'text-emerald-400' : 'text-red-600'}`}>
                       {playerHP > 0 ? 'VICTORY' : 'GAME OVER'}
                     </div>
-                    {/* 👇 ปุ่มนี้เชื่อมกับ onQuitBattle ที่มาจาก App.jsx ของคุณแล้วครับ */}
-                    <button onClick={onQuitBattle} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none">
-                      RETURN TO ACADEMY
-                    </button>
+                    {/* กลับหน้าฉากหลัก */}
+                    {onQuitBattle ? (
+                      <button onClick={onQuitBattle} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none">RETURN TO ACADEMY</button>
+                    ) : (
+                      <button onClick={restartGame} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none">PLAY AGAIN</button>
+                    )}
                   </div>
                 )}
               </div>
@@ -564,14 +597,14 @@ export default function BattleScene({ onQuitBattle }) {
           </div>
 
           {/* RIGHT: Combat Log Terminal */}
-          <div className="flex-[1.2] bg-[#020617] border-4 border-indigo-900 p-4 flex flex-col shadow-[inset_0_0_30px_rgba(49,46,129,0.8)] relative text-indigo-200">
-            <div className="font-epic text-[10px] mb-3 border-b-2 border-indigo-800 pb-2 flex justify-between text-indigo-400">
+          <div className="flex-[1.2] bg-[#020617] border-4 border-indigo-900 p-4 flex flex-col shadow-[inset_0_0_30px_rgba(49,46,129,0.8)] relative text-indigo-200 min-h-0">
+            <div className="font-epic text-[10px] mb-3 border-b-2 border-indigo-800 pb-2 flex justify-between text-indigo-400 shrink-0">
               <span>ARCANE.LOG</span>
               <span>TURN {turn}</span>
             </div>
-            <div className="flex-1 flex flex-col justify-end gap-2 font-hud text-xl font-bold tracking-wide">
+            <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 font-hud text-xl font-bold tracking-wide min-h-0">
               {logs.map((log, i) => (
-                <div key={i} className={`${i === 0 ? 'text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]' : 'opacity-50'}`}>
+                <div key={i} className={`shrink-0 ${i === 0 ? 'text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]' : 'opacity-50'}`}>
                   {i === 0 ? '>>' : '  '} {log}
                 </div>
               ))}
