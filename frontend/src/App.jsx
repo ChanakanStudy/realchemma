@@ -71,7 +71,15 @@ export default function App() {
     setTimeout(() => {
       setGameState('GAME');
       document.getElementById('game-container').style.display = 'block';
-      if (window.pScene) window.pScene.scene.resume();
+      
+      // Reliable resume: poll until pScene is ready (fixes race condition)
+      const resumeCheck = setInterval(() => {
+        if (window.pScene) {
+          window.pScene.scene.resume();
+          clearInterval(resumeCheck);
+        }
+      }, 200);
+
       flash.style.transition = 'opacity 2s ease-out';
       flash.style.opacity = '0';
     }, 1000);
