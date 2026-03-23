@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ==========================================
-// 🧪 ALCHEMY DATABASE & LOGIC
+// 🧪 ALCHEMY DATABASE & LOGIC (Merged inside for guarantee run)
 // ==========================================
 const ELEMENTS = [
   { symbol: 'H', name: 'Hydrogen', color: '#3b82f6', rune: '💧' },
@@ -19,6 +19,7 @@ const RECIPES = [
   { id: 'CO2', name: 'Choking Smog (CO2)', formula: { C: 1, O: 2 }, damage: 20, status: 'Suffocated', color: '#94a3b8' }
 ];
 
+// 🌟 ULTIMATE DATA (เพิ่มฟิลด์สี, bgTheme, fx สำหรับ Cinematic)
 const ULTIMATES = [
   { 
     id: 'zero', name: 'ABSOLUTE ZERO', req: ['Wet', 'Suffocated'], 
@@ -36,7 +37,7 @@ const ULTIMATES = [
 
 const MAX_TIME = 30;
 const MAX_PLAYER_HP = 300;
-const MAX_MONSTER_HP = 1500;
+const MAX_MONSTER_HP = 3000;
 
 function matchRecipe(crucible) {
   if (crucible.length === 0) return null;
@@ -55,10 +56,11 @@ function calculateQTEResult(progress) {
   return { result: 'MISS', mult: 0.5, color: '#ef4444' };
 }
 
+
 // ==========================================
-// 🎬 MAIN BATTLE COMPONENT (แทนที่ไฟล์ BattleScene.jsx เดิม)
+// 🎬 MAIN BATTLE COMPONENT
 // ==========================================
-export default function BattleScene({ onQuitBattle }) {
+export default function BattleApp() {
   const [phase, setPhase] = useState(1);
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
   const [turn, setTurn] = useState(1);
@@ -81,9 +83,9 @@ export default function BattleScene({ onQuitBattle }) {
   // 🎬 Cinematic Animation States
   const [screenShake, setScreenShake] = useState('');
   const [monsterHit, setMonsterHit] = useState(false);
-  const [attackEffect, setAttackEffect] = useState(null); 
+  const [attackEffect, setAttackEffect] = useState(null); // ตอนนี้เก็บเป็น Object { type, color, ultData }
   const [throwingItem, setThrowingItem] = useState(null);
-  const [cinematicText, setCinematicText] = useState(null); 
+  const [cinematicText, setCinematicText] = useState(null); // เก็บ { name, color }
 
   const addLog = useCallback((msg) => setLogs(prev => [msg, ...prev].slice(0, 5)), []);
 
@@ -132,7 +134,7 @@ export default function BattleScene({ onQuitBattle }) {
   // Global Input
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.code === 'Space' || e.code === 'Enter') && latestQte.current.active) {
+      if (e.code === 'Space' && latestQte.current.active) {
         e.preventDefault();
         resolveQTE();
       }
@@ -219,10 +221,12 @@ export default function BattleScene({ onQuitBattle }) {
 
   // 🎬 EPIC DYNAMIC ULTIMATE ANIMATION
   const executeUltimate = (ult) => {
+    // 1. Charge Phase (จอคล้ำมืด โชว์ชื่อท่า)
     setCinematicText({ name: ult.name, color: ult.color });
     setAttackEffect({ type: 'charge' });
     
     setTimeout(() => {
+      // 2. Execute Blast Phase (จอสั่น ระเบิด FX)
       setCinematicText(null);
       setAttackEffect({ type: 'ult', ultData: ult });
       
@@ -234,6 +238,7 @@ export default function BattleScene({ onQuitBattle }) {
       setMonsterHit(true);
       
       setTimeout(() => {
+        // 3. Impact Phase
         setScreenShake('');
         setMonsterHP(prev => {
           const newHp = Math.max(0, prev - ult.dmg);
@@ -282,7 +287,7 @@ export default function BattleScene({ onQuitBattle }) {
   return (
     <div className={`relative w-full h-screen text-white font-hud overflow-hidden flex flex-col selection:bg-indigo-500/30 ${screenShake} ${getDynamicBg()} transition-all duration-1000`}>
       
-      {/* 🎬 CINEMATIC TEXT OVERLAY */}
+      {/* 🎬 CINEMATIC TEXT OVERLAY (โชว์ชื่อท่าอลังการ) */}
       {cinematicText && (
         <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md animate-[fadeIn_0.5s_ease-out]">
            <div className="text-5xl font-epic text-transparent bg-clip-text animate-[pulse_0.5s_infinite] drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] tracking-widest text-center px-4"
@@ -297,8 +302,10 @@ export default function BattleScene({ onQuitBattle }) {
       ========================================= */}
       <div className="relative flex-1 flex flex-col items-center justify-center border-b-8 border-slate-900 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
         
+        {/* Magic Grid Background */}
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `linear-gradient(335deg, rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(155deg, rgba(255,255,255,0.1) 1px, transparent 1px)`, backgroundSize: '60px 60px' }} />
         
+        {/* Glow Center (ซ่อนตอนใช้ท่าเพื่อให้สีท่าเด่นขึ้น) */}
         {!attackEffect?.type?.startsWith('ult') && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] blur-[120px] rounded-full mix-blend-screen animate-[pulse_4s_infinite] bg-purple-900/30"></div>
         )}
@@ -322,10 +329,11 @@ export default function BattleScene({ onQuitBattle }) {
             </div>
           </div>
 
-          {/* ENEMY SPRITE */}
+          {/* ENEMY SPRITE (กระตุกและเปลี่ยนสีตอนโดนตี) */}
           <div className={`relative w-80 h-80 flex items-center justify-center transform transition-all 
             ${monsterHit ? 'scale-90 brightness-200 invert blur-md' : 'animate-[bounce_3s_steps(5)_infinite]'}
           `}>
+            {/* ออร่าศัตรู */}
             <div className="absolute inset-0 bg-red-600/20 blur-3xl rounded-full animate-[breathe_4s_infinite]"></div>
             <svg viewBox="0 0 32 32" width="100%" height="100%" style={{shapeRendering: "crispEdges"}} className="drop-shadow-[0_0_40px_rgba(220,38,38,0.8)] z-10">
               <path d="M10,2 h12 v4 h4 v16 h-4 v4 h-12 v-4 h-4 v-16 h4 z" fill="#450a0a" />
@@ -365,7 +373,7 @@ export default function BattleScene({ onQuitBattle }) {
           </div>
         )}
 
-        {/* --- ☢️ DYNAMIC ULTIMATE VFX ☢️ --- */}
+        {/* --- ☢️ DYNAMIC ULTIMATE VFX (อ่านค่าจากตัวแปร) ☢️ --- */}
         {attackEffect?.type === 'ult' && (
           <div className={`absolute inset-0 pointer-events-none z-50 animate-[${attackEffect.ultData.fx}_1.5s_ease-out_forwards] mix-blend-screen`} 
                style={{ backgroundColor: attackEffect.ultData.color, boxShadow: `inset 0 0 150px ${attackEffect.ultData.color}` }}>
@@ -553,10 +561,7 @@ export default function BattleScene({ onQuitBattle }) {
                     <div className={`font-epic text-5xl mb-8 drop-shadow-[6px_6px_0_#000] ${playerHP > 0 ? 'text-emerald-400' : 'text-red-600'}`}>
                       {playerHP > 0 ? 'VICTORY' : 'GAME OVER'}
                     </div>
-                    {/* 👇 ปุ่มนี้เชื่อมกับ onQuitBattle ที่มาจาก App.jsx ของคุณแล้วครับ */}
-                    <button onClick={onQuitBattle} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none">
-                      RETURN TO ACADEMY
-                    </button>
+                    <button onClick={restartGame} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none">PLAY AGAIN</button>
                   </div>
                 )}
               </div>
@@ -576,6 +581,7 @@ export default function BattleScene({ onQuitBattle }) {
                 </div>
               ))}
             </div>
+            {/* Scanline Effect */}
             <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px] opacity-30"></div>
           </div>
 

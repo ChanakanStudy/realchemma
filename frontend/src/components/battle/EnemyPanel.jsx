@@ -101,6 +101,8 @@ export default function EnemyPanel({
         <div className="absolute inset-0 bg-white mix-blend-overlay z-50 animate-[ping_0.5s_steps(2)_forwards]" />
       )}
 
+      
+
       {/* --- ✋ PLAYER HAND & THROW ANIMATION ✋ --- */}
       {throwingItem && (
         <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
