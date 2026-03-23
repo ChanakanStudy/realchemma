@@ -6,7 +6,7 @@ import BattleScene from './components/battle/BattleScene';
 export default function App() {
   const [gameState, setGameState] = useState('MENU');
   const [chatMessages, setChatMessages] = useState([
-    { type: 'oracle', text: 'ยินดีต้อนรับนักเรียนเจ้าแห่งศาสตร์เคมี... เจ้ามีคำถามใดจะถามศิลาปราชญ์หรือไม่?' },
+    { type: 'oracle', text: 'ยินดีต้อนรับนักเรียนเจ้าแห่งศาสตร์เคมี... เจ้ามีคำถามใดจะถามหรือไม่?' },
   ]);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
@@ -85,7 +85,12 @@ export default function App() {
     setChatInput('');
     setChatLoading(true);
 
-    const response = await callGeminiAPI(text);
+    const historyPayload = chatMessages.map(msg => ({
+      role: msg.type === 'user' ? 'user' : 'assistant',
+      content: msg.text
+    }));
+
+    const response = await callGeminiAPI(text, historyPayload);
 
     setChatMessages(prev => [...prev, { type: 'oracle', text: response }]);
     setChatLoading(false);
@@ -142,40 +147,45 @@ export default function App() {
 
       {/* --- Oracle Chat UI --- */}
       {chatOpen && (
-        <div id="chatUI" style={{ display: 'flex' }}>
+        <div id="chatUI" className="chat-container" style={{ display: 'flex' }}>
           <div className="chat-header">
-            THE ORACLE STONE
+            🧪 CHEMMA Lab Assistant
             <button className="close-chat" onClick={closeChat}>×</button>
           </div>
-          <div className="chat-history" id="chatHistory" ref={chatHistoryRef}>
+          <div className="chat-box" id="chatHistory" ref={chatHistoryRef}>
             {chatMessages.map((msg, i) => (
-              <div key={i} className={`chat-msg ${msg.type === 'user' ? 'msg-user' : 'msg-oracle'}`}>
-                {msg.text}
+              <div key={i} className={msg.type === 'user' ? 'message-row user-row' : 'message-row bot-row'}>
+                <div className={msg.type === 'user' ? 'message user-msg' : 'message bot-msg'}>
+                  {msg.text}
+                </div>
               </div>
             ))}
             {chatLoading && (
-              <div className="chat-msg msg-oracle typing-indicator">
-                กำลังรวบรวมพลังเวท...
+              <div className="message-row bot-row">
+                <div className="message bot-msg typing-indicator">
+                  กำลังคิดสูตรเคมี...
+                </div>
               </div>
             )}
           </div>
-          <div className="chat-input-area">
+          <div className="input-area">
             <input
               type="text"
+              id="chatInput"
               ref={chatInputRef}
-              className="chat-input"
-              placeholder="ร่ายคำถามของคุณที่นี่..."
+              placeholder="พิมพ์ถามเกี่ยวกับวิชาเคมี..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyPress={handleChatKeyPress}
               disabled={chatLoading}
             />
             <button
-              className="chat-btn"
+              id="sendBtn"
               onClick={sendMessage}
               disabled={chatLoading}
+              title="ส่งข้อความ"
             >
-              ร่ายมนตร์
+              🚀
             </button>
           </div>
         </div>
