@@ -49,10 +49,19 @@ function matchRecipe(crucible) {
   }) || null;
 }
 
-function calculateQTEResult(progress) {
-  if (progress >= 45 && progress <= 55) return { result: 'PERFECT', mult: 1.5, color: '#10b981' };
-  if (progress >= 30 && progress <= 70) return { result: 'GOOD', mult: 1.0, color: '#eab308' };
-  return { result: 'MISS', mult: 0.5, color: '#ef4444' };
+// ⚡ คำนวณ QTE โดยรองรับระบบ Overcharge
+function calculateQTEResult(progress, isOvercharge) {
+  if (isOvercharge) {
+    // โซน Overcharge แคบลง
+    if (progress >= 47 && progress <= 53) return { result: 'PERFECT', mult: 1.5, color: '#10b981' };
+    if (progress >= 35 && progress <= 65) return { result: 'GOOD', mult: 1.0, color: '#eab308' };
+    return { result: 'MISS', mult: 0.5, color: '#ef4444' };
+  } else {
+    // โซนปกติ
+    if (progress >= 45 && progress <= 55) return { result: 'PERFECT', mult: 1.5, color: '#10b981' };
+    if (progress >= 30 && progress <= 70) return { result: 'GOOD', mult: 1.0, color: '#eab308' };
+    return { result: 'MISS', mult: 0.5, color: '#ef4444' };
+  }
 }
 
 // ==========================================
@@ -70,12 +79,11 @@ export default function BattleApp({ onQuitBattle }) {
   const [inventory, setInventory] = useState([]);
   const [logs, setLogs] = useState(['AN ANCIENT HOMUNCULUS BLOCKS YOUR PATH!']);
 
-  // 🔒 Lock System
   const [hasCastUltimate, setHasCastUltimate] = useState(false);
 
-  // QTE Engine
-  const [qte, setQte] = useState({ active: false, progress: 0, direction: 1, item: null });
-  const latestQte = useRef({ active: false, progress: 0, direction: 1, item: null });
+  // QTE Engine (เพิ่มตัวแปร overcharge)
+  const [qte, setQte] = useState({ active: false, progress: 0, direction: 1, item: null, overcharge: false });
+  const latestQte = useRef({ active: false, progress: 0, direction: 1, item: null, overcharge: false });
   const [qteResult, setQteResult] = useState(null);
 
   const requestRef = useRef();
@@ -86,16 +94,14 @@ export default function BattleApp({ onQuitBattle }) {
   const [monsterHit, setMonsterHit] = useState(false);
   const [attackEffect, setAttackEffect] = useState(null); 
   const [throwingItem, setThrowingItem] = useState(null);
+  const [chargingItem, setChargingItem] = useState(null); // Anticipation Layer
   const [cinematicText, setCinematicText] = useState(null); 
 
   const addLog = useCallback((msg) => setLogs(prev => [msg, ...prev].slice(0, 5)), []);
-
   const endGame = useCallback((isWin, reason) => {
-    setPhase(5);
-    addLog(reason);
+    setPhase(5); addLog(reason);
   }, [addLog]);
 
-  // --- Logic Flow ---
   const monsterTurn = useCallback(() => {
     if (monsterHP <= 0) return;
     setScreenShake('animate-[shake_0.2s_ease-in-out_infinite]');
@@ -117,7 +123,7 @@ export default function BattleApp({ onQuitBattle }) {
           });
           setPhase(1); 
           setTimeLeft(MAX_TIME);
-          setHasCastUltimate(false); // 🔓 Unlock Ultimate for new turn
+          setHasCastUltimate(false); 
         }, 2000);
       }
       return nextHp;
@@ -138,7 +144,7 @@ export default function BattleApp({ onQuitBattle }) {
 
   // Timer
   useEffect(() => {
-    if (phase >= 4 || phase === 0 || qte.active || cinematicText !== null) return;
+    if (phase >= 4 || phase === 0 || qte.active || cinematicText !== null || chargingItem !== null) return;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) { handleNextPhase(); return MAX_TIME; }
@@ -146,16 +152,18 @@ export default function BattleApp({ onQuitBattle }) {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [phase, qte.active, cinematicText, handleNextPhase]);
+  }, [phase, qte.active, cinematicText, chargingItem, handleNextPhase]);
 
-  // QTE Loop
+  // QTE Loop 
   const animateQTE = useCallback((time) => {
     if (previousTimeRef.current != undefined) {
       const deltaTime = time - previousTimeRef.current;
       let prev = latestQte.current;
       if (!prev.active) return;
 
-      let nextP = prev.progress + (prev.direction * 0.15 * deltaTime);
+      // ⚡ ความเร็วเพิ่มขึ้น 1.6 เท่าถ้าเป็น Overcharge
+      let speedMult = prev.overcharge ? 1.6 : 1.0;
+      let nextP = prev.progress + (prev.direction * 0.15 * speedMult * deltaTime);
       let nextD = prev.direction;
       if (nextP >= 100) { nextP = 100; nextD = -1; }
       if (nextP <= 0) { nextP = 0; nextD = 1; }
@@ -200,59 +208,106 @@ export default function BattleApp({ onQuitBattle }) {
     setCrucible([]);
   };
 
-  const initiateThrow = (index) => {
+  // ⚡ Initiate Throw (Normal vs Overcharge)
+  const initiateThrow = (index, isOvercharge = false) => {
     const compound = inventory[index];
     const newInv = [...inventory];
     newInv.splice(index, 1);
     setInventory(newInv);
 
-    latestQte.current = { active: true, progress: 0, direction: 1, item: compound };
-    setQte(latestQte.current);
-    setQteResult(null);
-    previousTimeRef.current = undefined; 
+    if (isOvercharge) {
+      // Anticipation Phase (Layer 1)
+      addLog(`>> <span style="color:#ef4444; font-weight:bold;">OVERCHARGE INITIATED...</span>`);
+      setChargingItem(compound); // กระตุ้นแอนิเมชันมือสั่นชาร์จพลัง
+      
+      setTimeout(() => {
+        setChargingItem(null);
+        latestQte.current = { active: true, progress: 0, direction: 1, item: compound, overcharge: true };
+        setQte(latestQte.current);
+        setQteResult(null);
+        previousTimeRef.current = undefined; 
+      }, 500);
+    } else {
+      // Normal Throw Phase
+      latestQte.current = { active: true, progress: 0, direction: 1, item: compound, overcharge: false };
+      setQte(latestQte.current);
+      setQteResult(null);
+      previousTimeRef.current = undefined; 
+    }
   };
 
   const resolveQTE = useCallback(() => {
     const current = latestQte.current;
     if (!current.active) return;
 
-    const { result, mult, color } = calculateQTEResult(current.progress);
+    const { result, mult, color } = calculateQTEResult(current.progress, current.overcharge);
 
     latestQte.current = { ...current, active: false };
     setQte(latestQte.current);
     setQteResult({ text: result, color: color });
-    setThrowingItem(current.item);
+    
+    // โยนไอเทม (วาดมือปา)
+    setThrowingItem({ ...current.item, isOvercharge: current.overcharge });
 
-    setTimeout(() => { executeThrow(current.item, mult, result); }, 600);
+    setTimeout(() => { executeThrow(current.item, mult, result, current.overcharge); }, 600);
   }, []);
 
-  const executeThrow = (compound, mult, result) => {
+  // 💥 Execute Effect (Layer 3: Consequence)
+  const executeThrow = (compound, mult, result, isOvercharge) => {
     setThrowingItem(null);
-    setAttackEffect({ type: 'hit', color: compound.color });
+    setAttackEffect({ type: 'hit', color: compound.color, isOvercharge });
     setMonsterHit(true);
-    setScreenShake('animate-[shake_0.2s_ease-in-out_infinite]');
+    
+    if (isOvercharge) setScreenShake('animate-[shakeHeavy_0.3s_ease-in-out_infinite]');
+    else setScreenShake('animate-[shake_0.2s_ease-in-out_infinite]');
 
     setTimeout(() => {
       setMonsterHit(false); setScreenShake(''); setAttackEffect(null); setQteResult(null);
 
-      const finalDmg = Math.floor(compound.damage * mult);
+      // --- 💥 DAMAGE CALCULATION ---
+      let finalDmg = Math.floor(compound.damage * mult);
+      
+      if (isOvercharge) {
+        if (result === 'PERFECT') finalDmg = Math.floor(compound.damage * 2.2);
+        else if (result === 'GOOD') finalDmg = Math.floor(compound.damage * 1.8);
+        // MISS remains 0.5 multiplier from calculateQTEResult
+        
+        // ⚠️ BACKFIRE LOGIC (25% Chance)
+        if (Math.random() < 0.25) {
+          const backfireDmg = Math.floor(Math.random() * 31) + 30; // 30-60
+          setPlayerHP(prev => {
+            const nextHp = Math.max(0, prev - backfireDmg);
+            if (nextHp <= 0) setTimeout(() => endGame(false, 'KILLED BY YOUR OWN BACKFIRE...'), 500);
+            return nextHp;
+          });
+          addLog(`<span style="color:#ef4444">> BACKFIRE! YOU TOOK ${backfireDmg} DMG</span>`);
+          // Screen shake feedback
+          setScreenShake('animate-[shake_0.4s_ease-in-out_infinite]');
+          setTimeout(() => setScreenShake(''), 400);
+        }
+      }
+
       setMonsterHP(prev => {
         const newHp = Math.max(0, prev - finalDmg);
-        if (newHp <= 0) endGame(true, 'THE HOMUNCULUS IS DESTROYED!');
+        if (newHp <= 0 && playerHP > 0) endGame(true, 'THE HOMUNCULUS IS DESTROYED!');
         return newHp;
       });
 
       if (result !== 'MISS' && compound.status && !monsterStatuses.includes(compound.status)) {
         setMonsterStatuses(prev => [...prev, compound.status]);
       }
-      addLog(`[${result}] THREW ${compound.name}! DEALT ${finalDmg} DMG.`);
+      
+      if (isOvercharge) {
+        addLog(`<span style="color:#facc15">[${result}] OVERCHARGED ${compound.name}! DEALT ${finalDmg} DMG.</span>`);
+      } else {
+        addLog(`[${result}] THREW ${compound.name}! DEALT ${finalDmg} DMG.`);
+      }
     }, 300);
   };
 
-  // 🎬 EPIC DYNAMIC ULTIMATE ANIMATION
   const executeUltimate = (ult) => {
     if (hasCastUltimate) return;
-    setHasCastUltimate(true); // 🔒 Lock Ultimate
+    setHasCastUltimate(true); 
 
     setCinematicText({ name: ult.name, color: ult.color });
     setAttackEffect({ type: 'charge' });
@@ -275,11 +330,8 @@ export default function BattleApp({ onQuitBattle }) {
           if (newHp <= 0) {
             endGame(true, `TARGET DECIMATED BY ${ult.name}!`);
           } else {
-            // ⏭️ กรณีบอสไม่ตาย ข้ามไปเทิร์นศัตรูทันที
             setTimeout(() => {
-              setMonsterHit(false);
-              setAttackEffect(null);
-              setMonsterStatuses([]); 
+              setMonsterHit(false); setAttackEffect(null); setMonsterStatuses([]); 
               addLog('STATUS EFFECTS DISSIPATED...');
               handleNextPhase();
             }, 1500);
@@ -301,7 +353,7 @@ export default function BattleApp({ onQuitBattle }) {
 
   const getDynamicBg = () => {
     if (attackEffect?.type === 'ult') return attackEffect.ultData.bgTheme;
-    if (attackEffect?.type === 'charge') return 'bg-slate-950 brightness-50 grayscale';
+    if (attackEffect?.type === 'charge' || chargingItem !== null) return 'bg-slate-950 brightness-50 grayscale';
     return 'bg-slate-950';
   };
 
@@ -368,13 +420,31 @@ export default function BattleApp({ onQuitBattle }) {
         {/* --- 💥 QTE OVERLAY 💥 --- */}
         {qte.active && (
           <div className="absolute top-[20%] z-50 flex flex-col items-center">
-            <div className="font-epic text-yellow-300 text-lg mb-4 drop-shadow-[4px_4px_0_#000] animate-bounce">HIT SPACEBAR!</div>
-            <div className="w-[400px] h-8 border-4 border-white bg-black relative flex" onClick={resolveQTE}>
-              <div style={{flex: 30}} className="bg-red-600/80"></div>   
-              <div style={{flex: 15}} className="bg-yellow-400/80"></div>
-              <div style={{flex: 10}} className="bg-emerald-500 shadow-[0_0_20px_#10b981_inset] z-10 border-x-2 border-white"></div> 
-              <div style={{flex: 15}} className="bg-yellow-400/80"></div>
-              <div style={{flex: 30}} className="bg-red-600/80"></div>   
+            <div className={`font-epic text-lg mb-4 drop-shadow-[4px_4px_0_#000] animate-bounce ${qte.overcharge ? 'text-red-500 font-black' : 'text-yellow-300'}`}>
+              {qte.overcharge ? '⚠ OVERCHARGE RELEASE ⚠' : 'HIT SPACEBAR!'}
+            </div>
+            
+            {/* Dynamic QTE Bar */}
+            <div className={`w-[400px] h-8 border-4 bg-black relative flex ${qte.overcharge ? 'border-red-500 shadow-[0_0_20px_#ef4444] animate-[shake_0.5s_infinite]' : 'border-white'}`} onClick={resolveQTE}>
+              {qte.overcharge ? (
+                <>
+                  {/* Tighter perfect zone for Overcharge (47-53) */}
+                  <div style={{flex: 35}} className="bg-red-800/90"></div>   
+                  <div style={{flex: 12}} className="bg-orange-500/90"></div>
+                  <div style={{flex: 6}} className="bg-emerald-500 shadow-[0_0_20px_#10b981_inset] z-10 border-x-2 border-white"></div> 
+                  <div style={{flex: 12}} className="bg-orange-500/90"></div>
+                  <div style={{flex: 35}} className="bg-red-800/90"></div>   
+                </>
+              ) : (
+                <>
+                  {/* Normal Zone (45-55) */}
+                  <div style={{flex: 30}} className="bg-red-600/80"></div>   
+                  <div style={{flex: 15}} className="bg-yellow-400/80"></div>
+                  <div style={{flex: 10}} className="bg-emerald-500 shadow-[0_0_20px_#10b981_inset] z-10 border-x-2 border-white"></div> 
+                  <div style={{flex: 15}} className="bg-yellow-400/80"></div>
+                  <div style={{flex: 30}} className="bg-red-600/80"></div>   
+                </>
+              )}
               <div className="absolute top-[-12px] bottom-[-12px] w-2 bg-white drop-shadow-[0_0_8px_#fff]" style={{ left: `${qte.progress}%`, transform: 'translateX(-50%)' }} />
             </div>
           </div>
@@ -386,10 +456,36 @@ export default function BattleApp({ onQuitBattle }) {
           </div>
         )}
 
+        {/* --- ⚡ ANTICIPATION CHARGE (OVERCHARGE PREP) --- */}
+        {chargingItem && (
+          <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden bg-red-900/20 mix-blend-overlay animate-[pulse_0.2s_infinite]">
+            <div className="absolute bottom-[0%] right-[5%] w-[450px] h-[450px] origin-bottom-right animate-[shakeHeavy_0.1s_infinite]">
+              <svg viewBox="0 0 32 32" className="w-full h-full drop-shadow-[0_20px_20px_rgba(220,38,38,0.5)]" style={{shapeRendering: "crispEdges"}}>
+                <rect x="16" y="20" width="16" height="16" fill="#0f172a" />
+                <rect x="14" y="18" width="18" height="4" fill="#fbbf24" />
+                <rect x="18" y="22" width="4" height="10" fill="#1e293b" />
+                <rect x="10" y="8" width="12" height="10" fill="#451a03" />
+                <rect x="8" y="12" width="4" height="4" fill="#290f02" />
+                <rect x="6" y="6" width="4" height="8" fill="#290f02" />
+                <rect x="10" y="6" width="2" height="4" fill="#290f02" />
+              </svg>
+            </div>
+            <div className="absolute bottom-[28%] right-[22%] w-24 h-24 animate-[shakeHeavy_0.1s_infinite]">
+              <svg viewBox="0 0 16 16" width="100%" height="100%" style={{shapeRendering: "crispEdges"}} className="drop-shadow-[0_0_30px_rgba(239,68,68,1)]">
+                <rect x="6" y="0" width="4" height="2" fill="#d4d4d8" />
+                <rect x="7" y="2" width="2" height="4" fill="#cbd5e1" />
+                <path d="M4,6 h8 v8 h-8 z" fill={chargingItem.color} />
+                <path d="M4,6 h8 v4 h-8 z" fill="#fff" fillOpacity="0.4" />
+                <path d="M3,5 h10 v10 h-10 z" fill="transparent" stroke="#fff" strokeWidth="1" />
+              </svg>
+            </div>
+          </div>
+        )}
+
         {/* --- 💥 NORMAL THROW IMPACT --- */}
         {attackEffect?.type === 'hit' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-            <div className="w-80 h-80 rounded-full mix-blend-screen animate-[explosion_0.4s_ease-out_forwards]" style={{backgroundColor: attackEffect.color, filter: 'blur(30px)'}}></div>
+            <div className={`w-80 h-80 rounded-full mix-blend-screen animate-[explosion_0.4s_ease-out_forwards] ${attackEffect.isOvercharge ? 'scale-150 blur-xl' : 'blur-3xl'}`} style={{backgroundColor: attackEffect.color}}></div>
           </div>
         )}
 
@@ -415,7 +511,7 @@ export default function BattleApp({ onQuitBattle }) {
               </svg>
             </div>
             <div className="absolute bottom-[20%] right-[15%] w-24 h-24 animate-[potionFly_0.6s_ease-in_forwards]">
-              <svg viewBox="0 0 16 16" width="100%" height="100%" style={{shapeRendering: "crispEdges"}} className="drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]">
+              <svg viewBox="0 0 16 16" width="100%" height="100%" style={{shapeRendering: "crispEdges"}} className={`drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] ${throwingItem.isOvercharge ? 'animate-[pulse_0.2s_infinite]' : ''}`}>
                 <rect x="6" y="0" width="4" height="2" fill="#d4d4d8" />
                 <rect x="7" y="2" width="2" height="4" fill="#cbd5e1" />
                 <path d="M4,6 h8 v8 h-8 z" fill={throwingItem.color} />
@@ -511,26 +607,47 @@ export default function BattleApp({ onQuitBattle }) {
                   ) : (
                     <div className="grid grid-cols-2 gap-4">
                       {inventory.map((comp, i) => (
-                        <button 
-                          key={i} onClick={() => initiateThrow(i)} disabled={throwingItem !== null || qte.active}
-                          className={`relative p-4 bg-slate-900 border-4 border-slate-600 text-left shadow-[6px_6px_0_#000] hover:bg-slate-800 group flex flex-col ${(throwingItem || qte.active) ? 'opacity-50 cursor-not-allowed' : 'active:translate-y-1 active:shadow-none'}`}
+                        <div 
+                          key={i} 
+                          className={`relative p-4 bg-slate-900 border-4 border-slate-600 text-left shadow-[6px_6px_0_#000] flex flex-col gap-2 ${(throwingItem || qte.active || chargingItem) ? 'opacity-50' : 'hover:bg-slate-800 transition-colors'}`}
                         >
-                          <div className="font-epic text-[10px] text-white mb-3 truncate group-hover:text-yellow-300 drop-shadow-[1px_1px_0_#000]">{comp.name}</div>
-                          <div className="flex gap-3 items-center">
-                             <div className="w-10 h-10 rounded-full border-2 border-white shadow-[0_0_10px_rgba(255,255,255,0.5)] shrink-0" style={{backgroundColor: comp.color}}></div>
-                             <div className="flex flex-col gap-1 w-full">
-                               <div className="flex justify-between bg-black/80 px-2 py-1 border border-slate-700">
-                                 <span className="font-hud text-xs text-slate-400">DMG</span>
-                                 <span className="font-hud text-sm font-bold text-white">{comp.damage}</span>
-                               </div>
-                               {comp.status && (
-                                 <div className="text-center font-epic text-[8px] py-1 border border-white/20" style={{backgroundColor: comp.color, color: '#000'}}>
-                                   {comp.status}
-                                 </div>
-                               )}
-                             </div>
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="font-epic text-[10px] text-white truncate drop-shadow-[1px_1px_0_#000] leading-tight w-2/3">{comp.name}</div>
+                            <div className="w-8 h-8 rounded-full border-2 border-white shadow-[0_0_10px_rgba(255,255,255,0.5)] shrink-0" style={{backgroundColor: comp.color}}></div>
                           </div>
-                        </button>
+                          
+                          <div className="flex flex-col gap-1 w-full mb-2">
+                            <div className="flex justify-between bg-black/80 px-2 py-1 border border-slate-700">
+                              <span className="font-hud text-xs text-slate-400">DMG</span>
+                              <span className="font-hud text-sm font-bold text-white">{comp.damage}</span>
+                            </div>
+                            {comp.status && (
+                              <div className="text-center font-epic text-[8px] py-1 border border-white/20" style={{backgroundColor: comp.color, color: '#000'}}>
+                                {comp.status}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* 💥 DUAL ACTION BUTTONS */}
+                          <div className="flex gap-2 mt-auto">
+                            <button 
+                              onClick={() => initiateThrow(i, false)} 
+                              disabled={throwingItem !== null || qte.active || chargingItem !== null}
+                              className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 border-b-4 border-slate-900 font-epic text-[8px] text-white active:border-b-0 active:translate-y-1 transition-all"
+                            >
+                              THROW
+                            </button>
+                            <button 
+                              onClick={() => initiateThrow(i, true)} 
+                              disabled={throwingItem !== null || qte.active || chargingItem !== null}
+                              className="flex-[1.5] py-2 bg-red-950 border-b-4 border-red-900 font-epic text-[8px] text-red-200 active:border-b-0 active:translate-y-1 hover:bg-red-900 hover:text-white transition-all flex justify-center items-center gap-1 group relative overflow-hidden"
+                              title="OVERCHARGE: +80% DMG, HARDER QTE, 25% BACKFIRE"
+                            >
+                              <div className="absolute inset-0 bg-red-500/20 animate-pulse group-hover:bg-red-500/40"></div>
+                              <span className="relative z-10 font-bold">OVERCHARGE ⚠</span>
+                            </button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -567,7 +684,6 @@ export default function BattleApp({ onQuitBattle }) {
                   })}
                 </div>
                 
-                {/* ⏭️ SMART SKIP BUTTON */}
                 <button onClick={handleNextPhase} disabled={hasCastUltimate} className={`mt-4 w-full py-3 border-4 font-epic text-xs shrink-0 shadow-[4px_4px_0_#000] active:translate-y-1 active:shadow-none transition-colors ${hasCastUltimate ? 'bg-slate-800 border-slate-700 text-slate-500 opacity-50 cursor-not-allowed' : 'bg-slate-800 border-slate-600 text-white hover:bg-white hover:text-black'}`}>
                   {isAnyUltimateReady && !hasCastUltimate ? 'SKIP ULTIMATE & BRACE FOR IMPACT' : 'NO ULTIMATE READY - END TURN >'}
                 </button>
@@ -584,7 +700,6 @@ export default function BattleApp({ onQuitBattle }) {
                     <div className={`font-epic text-5xl mb-8 drop-shadow-[6px_6px_0_#000] ${playerHP > 0 ? 'text-emerald-400' : 'text-red-600'}`}>
                       {playerHP > 0 ? 'VICTORY' : 'GAME OVER'}
                     </div>
-                    {/* กลับหน้าฉากหลัก */}
                     {onQuitBattle ? (
                       <button onClick={onQuitBattle} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none">RETURN TO ACADEMY</button>
                     ) : (
@@ -604,9 +719,7 @@ export default function BattleApp({ onQuitBattle }) {
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 font-hud text-xl font-bold tracking-wide min-h-0">
               {logs.map((log, i) => (
-                <div key={i} className={`shrink-0 ${i === 0 ? 'text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]' : 'opacity-50'}`}>
-                  {i === 0 ? '>>' : '  '} {log}
-                </div>
+                <div key={i} className={`shrink-0 ${i === 0 ? 'text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]' : 'opacity-50'}`} dangerouslySetInnerHTML={{__html: log}} />
               ))}
             </div>
             <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px] opacity-30"></div>
@@ -630,10 +743,10 @@ export default function BattleApp({ onQuitBattle }) {
           75% { transform: translateX(-15px) translateY(5px); }
         }
         @keyframes shakeHeavy {
-          0%, 100% { transform: translateY(0); }
-          25% { transform: translateY(-25px) scale(1.05); }
-          50% { transform: translateY(25px) scale(0.95); }
-          75% { transform: translateY(-25px) scale(1.05); }
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-25px) translateX(-10px) scale(1.05); }
+          50% { transform: translateY(25px) translateX(10px) scale(0.95); }
+          75% { transform: translateY(-25px) translateX(-10px) scale(1.05); }
         }
         @keyframes nukeShake {
           0%, 100% { transform: translate(0, 0) scale(1); filter: invert(0); }
