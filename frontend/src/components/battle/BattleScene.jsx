@@ -35,7 +35,7 @@ const ULTIMATES = [
 ];
 
 const MAX_TIME = 30;
-const MAX_PLAYER_HP = 300;
+const MAX_PLAYER_HP = 100;
 const MAX_MONSTER_HP = 3000;
 
 function matchRecipe(crucible) {
