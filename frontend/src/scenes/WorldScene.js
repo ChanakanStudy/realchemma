@@ -52,6 +52,9 @@ export default class WorldScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D,F');
+        
+        // Fix: Prevent Phaser from blocking keys in HTML inputs (Chatbox) but still allow walking
+        this.input.keyboard.removeCapture('W,A,S,D,F,UP,DOWN,LEFT,RIGHT,SPACE');
 
         this.interactionTarget = null;
         this.fPrompt = this.add.text(0, 0, 'กด [F] เพื่อโต้ตอบ', { fontSize: '16px', fill: '#d4af37', backgroundColor: '#000000aa', padding: 5 }).setOrigin(0.5).setVisible(false).setDepth(100);
