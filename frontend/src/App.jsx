@@ -7,6 +7,7 @@ import MenuScreen from './features/menu/MenuScreen';
 import WorldScreen from './features/world/WorldScreen';
 import BattleScreen from './features/battle/BattleScreen';
 import ChatScreen from './features/chat/ChatScreen';
+import DialogueScreen from './features/dialogue/DialogueScreen';
 
 function GameContent() {
   const { gameState } = useGameContext();
@@ -25,10 +26,12 @@ function GameContent() {
       <div id="game-container"></div>
 
       {gameState === GAME_STATES.MENU && <MenuScreen />}
-      
+                                        
       {gameState === GAME_STATES.GAME && <WorldScreen />}
       
       <ChatScreen />
+
+      {gameState === GAME_STATES.DIALOGUE && <DialogueScreen />}
 
       {/* --- Battle UI Root --- */}
       {gameState === GAME_STATES.BATTLE && (

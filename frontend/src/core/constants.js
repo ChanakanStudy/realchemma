@@ -7,7 +7,8 @@ export const GAME_STATES = {
     MENU: 'MENU',
     GAME: 'GAME',
     BATTLE: 'BATTLE',
-    CHAT: 'CHAT'
+    CHAT: 'CHAT',
+    DIALOGUE: 'DIALOGUE'
 };
 
 export const EVENTS = {
@@ -16,7 +17,9 @@ export const EVENTS = {
     CLOSE_CHAT: 'chat:close',
     START_BATTLE: 'battle:start',
     QUIT_BATTLE: 'battle:quit',
-    UI_INTERACTION: 'ui:interaction'
+    UI_INTERACTION: 'ui:interaction',
+    OPEN_NPC_POPUP: 'OPEN_NPC_POPUP',
+    CLOSE_NPC_POPUP: 'CLOSE_NPC_POPUP',
 };
 
 export const MAX_PLAYER_HP = 300;

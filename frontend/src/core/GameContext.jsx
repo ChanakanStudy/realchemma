@@ -8,8 +8,8 @@ export const GameProvider = ({ children }) => {
     const [gameState, setGameState] = useState(GAME_STATES.MENU);
     const [playerHP, setPlayerHP] = useState(MAX_PLAYER_HP);
     const [chatOpen, setChatOpen] = useState(false);
+    const [npcDialogue, setNpcDialogue] = useState(null);
 
-    // Listen to EventBus for state changes from outside React (e.g. Phaser)
     useEffect(() => {
         const unsubs = [
             eventBus.on(EVENTS.CHANGE_STATE, (newState) => {
@@ -26,6 +26,15 @@ export const GameProvider = ({ children }) => {
             }),
             eventBus.on(EVENTS.QUIT_BATTLE, () => {
                 setGameState(GAME_STATES.GAME);
+            }),
+            eventBus.on(EVENTS.OPEN_NPC_POPUP, (data) => {
+                console.log('POPUP EVENT', data);
+                setNpcDialogue(data);
+                setGameState(GAME_STATES.DIALOGUE);
+            }),
+            eventBus.on(EVENTS.CLOSE_NPC_POPUP, () => {
+                setNpcDialogue(null);
+                setGameState(GAME_STATES.GAME);
             })
         ];
 
@@ -34,10 +43,10 @@ export const GameProvider = ({ children }) => {
         };
     }, []);
 
-    // Sync state back to window ONLY for debugging if needed, but primary communication is Context/EventBus
     useEffect(() => {
         window.gameState = gameState;
         window.inChat = chatOpen;
+        console.log('STATE:', gameState);
     }, [gameState, chatOpen]);
 
     const value = {
@@ -52,7 +61,9 @@ export const GameProvider = ({ children }) => {
         setChatOpen: (isOpen) => {
             setChatOpen(isOpen);
             eventBus.emit(isOpen ? EVENTS.OPEN_CHAT : EVENTS.CLOSE_CHAT);
-        }
+        },
+        npcDialogue,
+        setNpcDialogue
     };
 
     return (

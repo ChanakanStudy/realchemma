@@ -372,6 +372,76 @@ body, html {
     animation: pulse 1.5s infinite;
 }
 
+.dialogue-container {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 50;
+    padding-bottom: 40px;
+}
+
+.dialogue-box {
+    background: linear-gradient(to bottom, #1a1a2e, #16213e);
+    border: 3px solid #eab308;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    font-family: 'VT323', monospace;
+}
+
+.dialogue-npc-name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #eab308;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.dialogue-message {
+    font-size: 16px;
+    color: #e0e0e0;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.dialogue-choices {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.dialogue-choice-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 20px;
+    background: #234e6e;
+    border: 2px solid #eab308;
+    color: #eab308;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.dialogue-choice-btn:hover {
+    background: #eab308;
+    color: #1a1a2e;
+    transform: scale(1.05);
+}
+
+.dialogue-choice-btn:active {
+    transform: scale(0.95);
+}
+
 @keyframes pulse {
     0% { opacity: 0.5; }
     50% { opacity: 1; }
