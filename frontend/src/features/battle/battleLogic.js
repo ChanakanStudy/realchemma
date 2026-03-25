@@ -6,7 +6,12 @@ export const ELEMENTS = [
   { symbol: 'O', name: 'Oxygen', color: '#10b981', rune: '🌪️' },
   { symbol: 'Na', name: 'Sodium', color: '#eab308', rune: '⚡' },
   { symbol: 'Cl', name: 'Chlorine', color: '#84cc16', rune: '☣️' },
-  { symbol: 'C', name: 'Carbon', color: '#64748b', rune: '🌑' }
+  { symbol: 'C', name: 'Carbon', color: '#64748b', rune: '🌑' },
+  { symbol: 'N', name: 'Nitrogen', color: '#8b5cf6', rune: '💨' },
+  { symbol: 'S', name: 'Sulfur', color: '#f59e0b', rune: '🌋' },
+  { symbol: 'K', name: 'Potassium', color: '#ec4899', rune: '💥' },
+  { symbol: 'Fe', name: 'Iron', color: '#71717a', rune: '🛡️' },
+  { symbol: 'Ca', name: 'Calcium', color: '#d97706', rune: '🦴' }
 ];
 
 export const RECIPES = [
@@ -14,7 +19,13 @@ export const RECIPES = [
   { id: 'HCl', name: 'Acid Flask (HCl)', formula: { H: 1, Cl: 1 }, damage: 80, status: 'Corroded', color: '#4ade80' },
   { id: 'NaCl', name: 'Crystal Salt (NaCl)', formula: { Na: 1, Cl: 1 }, damage: 50, status: 'Crystalized', color: '#fef08a' },
   { id: 'NaOH', name: 'Caustic Brew (NaOH)', formula: { Na: 1, O: 1, H: 1 }, damage: 100, status: 'Burn', color: '#c084fc' },
-  { id: 'CO2', name: 'Choking Smog (CO2)', formula: { C: 1, O: 2 }, damage: 20, status: 'Suffocated', color: '#94a3b8' }
+  { id: 'CO2', name: 'Choking Smog (CO2)', formula: { C: 1, O: 2 }, damage: 20, status: 'Suffocated', color: '#94a3b8' },
+  { id: 'NH3', name: 'Ammonia Gas (NH3)', formula: { N: 1, H: 3 }, damage: 40, status: 'Shock', color: '#c4b5fd' }, // แอมโมเนียทำให้มึนงง
+  { id: 'H2S', name: 'Rotten Egg Gas (H2S)', formula: { H: 2, S: 1 }, damage: 90, status: 'Toxin', color: '#fcd34d' }, // แก๊สไข่เน่าเป็นพิษ
+  { id: 'Fe2O3', name: 'Rusted Iron (Fe2O3)', formula: { Fe: 2, O: 3 }, damage: 110, status: 'Crystalized', color: '#b45309' }, // สนิมเหล็ก เพิ่มน้ำหนัก/แช่แข็ง
+  { id: 'KCl', name: 'Potassium Salt (KCl)', formula: { K: 1, Cl: 1 }, damage: 60, status: 'Marked', color: '#fbcfe8' }, // สารเร่งระเบิด แปะเป้าหมาย
+  { id: 'CH4', name: 'Methane Gas (CH4)', formula: { C: 1, H: 4 }, damage: 30, status: 'Flammable', color: '#d1d5db' }, // มีเทน ไวไฟสูงมาก
+  { id: 'CaO', name: 'Quicklime (CaO)', formula: { Ca: 1, O: 1 }, damage: 85, status: 'Burn', color: '#ffedd5' }, // ปูนขาว คายความร้อนรุนแรง
 ];
 
 export const ULTIMATES = [
@@ -29,6 +40,18 @@ export const ULTIMATES = [
   { 
     id: 'nuke', name: 'PHILOSOPHER\'S NUKE', req: ['Wet', 'Corroded', 'Crystalized'], 
     dmg: 3500, color: '#ffffff', bgTheme: 'bg-white', fx: 'whiteout', desc: 'Total matter erasure protocol.' 
+  },
+  { 
+    id: 'thermobaric', name: 'THERMOBARIC IGNITION', req: ['Flammable', 'Burn'], 
+    dmg: 2800, color: '#f97316', bgTheme: 'bg-orange-950', fx: 'fireRise', desc: 'Ignite methane gas for a devastating shockwave.' 
+  },
+  { 
+    id: 'plague', name: 'NEUROTOXIC PLAGUE', req: ['Toxin', 'Shock'], 
+    dmg: 2500, color: '#8b5cf6', bgTheme: 'bg-purple-950', fx: 'iceShatter', desc: 'Unleash a lethal cloud of heavy toxic compounds.' 
+  },
+  { 
+    id: 'protocol_67', name: '67' ,req: ['Marked', 'Suffocated', 'Flammable', 'Toxin'], 
+    dmg: 6767, color: '#10b981', bgTheme: 'bg-black', fx: 'glitchBlast', desc: '??? ERROR: UNAUTHORIZED REACTION ???' 
   }
 ];
 

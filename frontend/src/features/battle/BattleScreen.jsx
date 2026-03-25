@@ -22,6 +22,12 @@ export default function BattleScene({ onQuitBattle }) {
   const [playerHP, setPlayerHP] = useState(MAX_PLAYER_HP);
   const [monsterHP, setMonsterHP] = useState(100); 
   const [monsterStatuses, setMonsterStatuses] = useState([]);
+  const statusesRef = useRef(monsterStatuses);
+  const playerHpRef = useRef(playerHP);
+  useEffect(() => { 
+    statusesRef.current = monsterStatuses; 
+    playerHpRef.current = playerHP;
+  }, [monsterStatuses, playerHP]);
   
   const [crucible, setCrucible] = useState([]);
   const [inventory, setInventory] = useState([]);
@@ -263,69 +269,75 @@ export default function BattleScene({ onQuitBattle }) {
 
       let finalDmg = Math.floor(compound.damage * mult);
       let consumedStatuses = [];
-      let currentPlayerHp = playerHP;
-
-      setMonsterStatuses(prevStatuses => {
-        let next = [...prevStatuses];
-        const consume = (statusName) => {
-           const idx = next.findIndex(s => s.name === statusName);
-           if (idx !== -1) { consumedStatuses.push(statusName); next.splice(idx, 1); return true; }
-           return false;
-        };
-
-        if (isOvercharge) {
-          if (consume('Marked')) finalDmg += 400;
-          if (consume('Corroded')) finalDmg = Math.floor(finalDmg * 1.5);
-          if (consume('Burn')) finalDmg += 300;
-          if (consume('Toxin')) finalDmg += 300;
-        }
-
-        if (isOvercharge) {
-          finalDmg = Math.floor(finalDmg * (1 - bossRef.current.overloadResist));
-          setBossState(b => ({ ...b, overloadResist: Math.min(0.5, b.overloadResist + 0.1) }));
-          
-          if (bossRef.current.reflecting) {
-            const reflectDmg = Math.floor(finalDmg * 0.3);
-            currentPlayerHp = Math.max(0, currentPlayerHp - reflectDmg);
-            addLog(`🛡️ <span style="color:#60a5fa">BOSS REFLECTED ${reflectDmg} DMG!</span>`);
-          }
-          
-          let bfChance = result === 'MISS' ? 0.50 : result === 'GOOD' ? 0.20 : 0;
-          if (Math.random() < bfChance) {
-            const bfDmg = Math.floor(Math.random() * 41) + 40; 
-            currentPlayerHp = Math.max(0, currentPlayerHp - bfDmg);
-            addLog(`<span style="color:#ef4444">> BACKFIRE! YOU TOOK ${bfDmg} DMG!</span>`);
-          }
-          if (result === 'PERFECT') {
-            setOcEnergy(e => Math.min(2, e + 1));
-            addLog('⚡ PERFECT OVERCHARGE! Energy Refunded.');
-          }
-        }
-
-        if (result !== 'MISS' && compound.status) {
-          if (bossRef.current.immunities.includes(compound.status)) {
-            addLog(`❌ TARGET IMMUNE TO ${compound.status.toUpperCase()}!`);
-          } else {
-            const existingIdx = next.findIndex(s => s.name === compound.status);
-            if (existingIdx === -1) next.push({ name: compound.status, tier: isOvercharge ? 2 : 1, duration: isOvercharge ? 2 : 3 });
-            else {
-              next[existingIdx].duration = isOvercharge ? 2 : 3;
-              next[existingIdx].tier = isOvercharge ? 2 : Math.max(1, next[existingIdx].tier);
-            }
-          }
-        }
-        return next;
-      });
-
-      setPlayerHP(currentPlayerHp);
-      const nextMonsterHp = Math.max(0, monsterHP - finalDmg);
-      setMonsterHP(nextMonsterHp);
       
-      if (nextMonsterHp <= 0 && currentPlayerHp > 0) {
-        endGame(true, 'TARGET ELIMINATED!');
-      } else if (currentPlayerHp <= 0) {
-        endGame(false, 'KILLED BY YOUR OWN BACKFIRE...');
+      // 🟢 ดึงข้อมูลล่าสุดจาก Ref แบบ Real-time!
+      let currentPlayerHp = playerHpRef.current; 
+      let nextStatuses = [...statusesRef.current]; 
+
+      const consume = (statusName) => {
+         const idx = nextStatuses.findIndex(s => s.name === statusName);
+         if (idx !== -1) { consumedStatuses.push(statusName); nextStatuses.splice(idx, 1); return true; }
+         return false;
+      };
+
+      // --- Overcharge: จุดระเบิดสถานะ ---
+      if (isOvercharge) {
+        if (consume('Marked')) finalDmg += 400;
+        if (consume('Corroded')) finalDmg = Math.floor(finalDmg * 1.5);
+        if (consume('Burn')) finalDmg += 300;
+        if (consume('Toxin')) finalDmg += 300;
       }
+
+      // --- Overcharge: ผลกระทบบอส & ผู้เล่น ---
+      if (isOvercharge) {
+        finalDmg = Math.floor(finalDmg * (1 - bossRef.current.overloadResist));
+        setBossState(b => ({ ...b, overloadResist: Math.min(0.5, b.overloadResist + 0.1) }));
+        
+        if (bossRef.current.reflecting) {
+          const reflectDmg = Math.floor(finalDmg * 0.3);
+          currentPlayerHp = Math.max(0, currentPlayerHp - reflectDmg);
+          addLog(`🛡️ <span style="color:#60a5fa">BOSS REFLECTED ${reflectDmg} DMG!</span>`);
+        }
+        
+        let bfChance = result === 'MISS' ? 0.50 : result === 'GOOD' ? 0.20 : 0;
+        if (Math.random() < bfChance) {
+          const bfDmg = Math.floor(Math.random() * 41) + 40; 
+          currentPlayerHp = Math.max(0, currentPlayerHp - bfDmg);
+          addLog(`<span style="color:#ef4444">> BACKFIRE! YOU TOOK ${bfDmg} DMG!</span>`);
+        }
+        if (result === 'PERFECT') {
+          setOcEnergy(e => Math.min(2, e + 1));
+          addLog('⚡ PERFECT OVERCHARGE! Energy Refunded.');
+        }
+      }
+
+      // --- เพิ่มสถานะใหม่ให้บอส (สะสมได้เรื่อยๆ แล้ว!) ---
+      if (result !== 'MISS' && compound.status) {
+        if (bossRef.current.immunities.includes(compound.status)) {
+          addLog(`❌ TARGET IMMUNE TO ${compound.status.toUpperCase()}!`);
+        } else {
+          const existingIdx = nextStatuses.findIndex(s => s.name === compound.status);
+          if (existingIdx === -1) nextStatuses.push({ name: compound.status, tier: isOvercharge ? 2 : 1, duration: isOvercharge ? 2 : 3 });
+          else {
+            nextStatuses[existingIdx].duration = isOvercharge ? 2 : 3;
+            nextStatuses[existingIdx].tier = isOvercharge ? 2 : Math.max(1, nextStatuses[existingIdx].tier);
+          }
+        }
+      }
+
+      // --- เซ็ต State รวดเดียว ---
+      setMonsterStatuses(nextStatuses);
+      setPlayerHP(currentPlayerHp);
+
+      setMonsterHP(prevBossHp => {
+        const nextMonsterHp = Math.max(0, prevBossHp - finalDmg);
+        if (nextMonsterHp <= 0 && currentPlayerHp > 0) {
+          endGame(true, 'TARGET ELIMINATED!');
+        } else if (currentPlayerHp <= 0) {
+          endGame(false, 'KILLED BY YOUR OWN BACKFIRE...');
+        }
+        return nextMonsterHp;
+      });
       
       if (consumedStatuses.length > 0) addLog(`💥 <span style="color:#f97316">OVERCHARGE DETONATED: ${consumedStatuses.join(', ')}!</span>`);
       
@@ -348,6 +360,7 @@ export default function BattleScene({ onQuitBattle }) {
       if(ult.id === 'nuke') setScreenShake('animate-[nukeShake_0.1s_ease-in-out_infinite]');
       else if(ult.id === 'zero') setScreenShake('animate-[shake_0.5s_ease-in-out_infinite]');
       else if(ult.id === 'hellfire') setScreenShake('animate-[shakeVertical_0.1s_ease-in-out_infinite]');
+      else if(ult.id === 'protocol_67') setScreenShake('animate-[glitchShake_0.1s_infinite]');
 
       addLog(`!!! UNLEASHING ${ult.name} !!!`);
       setMonsterHit(true);
@@ -870,6 +883,21 @@ export default function BattleScene({ onQuitBattle }) {
           20% { opacity: 1; }
           80% { opacity: 1; }
           100% { opacity: 0; }
+        }
+        @keyframes glitchShake {
+          0%, 100% { transform: translate(0, 0) skew(0deg); filter: hue-rotate(0deg) invert(0); }
+          20% { transform: translate(-20px, 15px) skew(10deg); filter: hue-rotate(90deg) invert(0.8); }
+          40% { transform: translate(20px, -15px) skew(-10deg); filter: hue-rotate(180deg) invert(0); }
+          60% { transform: translate(-15px, -20px) skew(5deg); filter: hue-rotate(270deg) invert(1); }
+          80% { transform: translate(15px, 20px) skew(-5deg); filter: hue-rotate(360deg) invert(0.5); }
+        }
+
+        @keyframes glitchBlast {
+          0% { opacity: 0; transform: scale(1); }
+          10% { opacity: 1; transform: scale(1.1); filter: invert(1); }
+          20% { opacity: 0.8; transform: scale(0.9) skew(20deg); background: #10b981; }
+          30% { opacity: 1; transform: scale(1.2) skew(-20deg); background: #ef4444; }
+          100% { opacity: 0; transform: scale(3); filter: invert(0); }
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 12px; }
