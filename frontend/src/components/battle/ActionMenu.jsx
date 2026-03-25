@@ -1,5 +1,5 @@
 import React from 'react';
-import { ELEMENTS, ULTIMATES } from '../../systems/battle/battleLogic';
+import { ELEMENTS, ULTIMATES } from '../../services/alchemyService';
 
 export default function ActionMenu({
   phase,

@@ -1,243 +1,158 @@
 import Phaser from 'phaser';
-import { DB, P, ArtData } from '../core/config.js';
+import { DB } from '../core/config.js';
 
 export default class WorldScene extends Phaser.Scene {
     constructor() { super('ChemmaScene'); }
 
     preload() {
-        // Nothing to load — all textures are generated programmatically in create()
+        console.log('[CHEMMA] Loading V4 Final Perfection Assets...');
+        const a = DB.Assets;
+        // Correct frameWidth for high-res sheet (assuming 2x2 slicing for mockup)
+        this.load.spritesheet('player', a.player, { frameWidth: 512, frameHeight: 512 });
+        this.load.image('tree', a.tree);
+        this.load.image('crystal', a.crystal);
+        this.load.image('pillar', a.pillar);
+        this.load.image('bridge', a.bridge);
+        this.load.image('grass', a.grass);
+        this.load.image('path', a.path);
+        this.load.image('water', a.water);
     }
 
     create() {
-        // CRITICAL: Generate all textures FIRST before any sprites reference them
-        // This MUST be in create(), NOT preload() — Phaser's loader can clear
-        // canvas textures created during preload when the load phase completes,
-        // causing intermittent "invisible sprite" bugs.
-        this.generateAllTextures();
-
-        window.pScene = this;
-        this.tileSize = 48;
-        this.facing = 'down';
+        console.log('[CHEMMA] Building Perfect 2.5D Animated World...');
+        this.tileSize = DB.TileSize;
+        this.cameras.main.setBackgroundColor('#1B5E20');
         
-        this.cameras.main.setBackgroundColor('#388E3C');
+        const mapWidth = DB.MapWidth * this.tileSize;
+        const mapHeight = DB.MapHeight * this.tileSize;
+        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
 
-        const terrainData = DB.MapLayout.map(row => [...row]);
+        // Animations for high-res 2x2 sheet (0:Front, 1:Back, 2:Left, 3:Right)
+        this.anims.create({
+            key: 'walk-down',
+            frames: [{ key: 'player', frame: 0 }],
+            frameRate: 10, repeat: -1
+        });
+        this.anims.create({
+            key: 'walk-up',
+            frames: [{ key: 'player', frame: 1 }],
+            frameRate: 10, repeat: -1
+        });
+        this.anims.create({
+            key: 'walk-left',
+            frames: [{ key: 'player', frame: 2 }],
+            frameRate: 10, repeat: -1
+        });
+        this.anims.create({
+            key: 'walk-right',
+            frames: [{ key: 'player', frame: 3 }],
+            frameRate: 10, repeat: -1
+        });
+
         this.trees = this.physics.add.staticGroup();
         this.walls = this.physics.add.staticGroup(); 
+        this.collectibles = this.physics.add.staticGroup();
+        this.npcs = this.physics.add.staticGroup();
+        this.waterTiles = [];
 
-        const mapWidth = 40 * this.tileSize;
-        const mapHeight = 25 * this.tileSize;
+        for (let y = 0; y < DB.MapHeight; y++) {
+            for (let x = 0; x < DB.MapWidth; x++) {
+                const cell = DB.MapLayout[y][x];
+                const px = x * this.tileSize + (this.tileSize/2);
+                const py = y * this.tileSize + (this.tileSize/2);
 
-        // Render the entire map from config arrays
-        for (let r = 0; r < terrainData.length; r++) {
-            for (let c = 0; c < terrainData[r].length; c++) {
-                const cell = terrainData[r][c];
-                const x = c * this.tileSize + this.tileSize / 2;
-                const y = r * this.tileSize + this.tileSize / 2;
-
-                // Base ground layer — alternate grass variants for visual richness
-                if (cell !== 4 && cell !== 0 && cell !== 1) {
-                    const grassKey = ((r + c) % 3 === 0) ? 't_grass2' : 't_grass';
-                    this.add.sprite(x, y, grassKey).setScale(3).setDepth(0);
+                // FIX: Tiles are 1024x1024, force them to tileSize+1 to hide gaps
+                if (cell === 2) { // Water
+                    const w = this.add.tileSprite(px, py, this.tileSize + 1, this.tileSize + 1, 'water').setDepth(0);
+                    w.setTileScale(0.0625, 0.0625); // 64 / 1024
+                    this.waterTiles.push(w);
+                    this.walls.create(px, py, null).setSize(this.tileSize, this.tileSize).setVisible(false);
+                } else if (cell === 3) { // Bridge
+                    this.add.tileSprite(px, py, this.tileSize + 1, this.tileSize + 1, 'water').setDepth(0).setTileScale(0.0625, 0.0625);
+                    this.add.image(px, py, 'bridge').setDisplaySize(this.tileSize + 1, this.tileSize + 1).setDepth(1);
+                } else if (cell === 1) { // Path
+                    this.add.image(px, py, 'path').setDisplaySize(this.tileSize + 1, this.tileSize + 1).setDepth(0);
+                } else { // Grass
+                    this.add.image(px, py, 'grass').setDisplaySize(this.tileSize + 1, this.tileSize + 1).setDepth(0);
                 }
 
-                if (cell === 0) { // Building
-                    this.add.rectangle(x, y, this.tileSize, this.tileSize, 0x37474F).setDepth(0);
-                } else if (cell === 1) { // House
-                    this.add.rectangle(x, y, this.tileSize, this.tileSize, 0x546E7A).setDepth(1);
-                    // Roof stripe
-                    this.add.rectangle(x, y - 12, this.tileSize, 8, 0x8D6E63).setDepth(2);
-                    this.walls.create(x, y, null).setSize(this.tileSize, this.tileSize).setVisible(false);
-                } else if (cell === 4) { // Water
-                    const water = this.add.sprite(x, y, 't_water').setScale(3).setDepth(0);
-                    // Animate water shimmer
-                    this.tweens.add({
-                        targets: water,
-                        alpha: { from: 0.85, to: 1.0 },
-                        duration: 1500 + Math.random() * 500,
-                        yoyo: true,
-                        repeat: -1,
-                        ease: 'Sine.easeInOut',
-                        delay: Math.random() * 800
-                    });
-                    this.walls.create(x, y, null).setSize(this.tileSize, this.tileSize).setVisible(false);
-                } else if (cell === 5) { // Path (ground only)
-                    // Already has grass base, no overlay needed
-                } else if (cell === 6) { // Dirt Path
-                    this.add.sprite(x, y, 't_dirt').setScale(3).setDepth(1);
-                } else if (cell === 7) { // Fences
-                    this.add.sprite(x, y, 't_fence').setScale(3).setDepth(y);
-                    this.walls.create(x, y, null).setSize(this.tileSize, this.tileSize).setVisible(false);
-                } else if (cell === 8) { // Crystals
-                    const cry = this.add.sprite(x, y - 10, 'crystal').setScale(3).setDepth(y + 5);
-                    this.tweens.add({ targets: cry, y: y - 22, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-                } else if (cell === 9) { // Oracle NPC
-                    this.spark = this.physics.add.sprite(x, y, 'npc_spark').setScale(3).setDepth(y);
-                    this.addInteraction(this.spark, 'ORACLE');
-                    this.spark.body.setSize(12, 10).setOffset(2, 6);
-                    this.spark.setImmovable(true);
-                    // Idle floating glow
-                    this.tweens.add({ targets: this.spark, y: y - 4, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-                } else if (cell === 10) { // Battle Master NPC
-                    this.master = this.physics.add.sprite(x, y, 'battle_master').setScale(3).setDepth(y);
-                    this.addInteraction(this.master, 'BATTLE');
-                    this.master.body.setSize(12, 10).setOffset(2, 6);
-                    this.master.setImmovable(true);
-                } else if (cell === 12) { // Pine Tree
-                    const tree = this.trees.create(x, y - 48, 't_pine_tree').setScale(5);
-                    tree.setSize(20, 20).setOffset(11, 26);
-                    tree.setDepth(y + 30);
-                } else if (cell === 13) { // Crop Field
-                    this.add.sprite(x, y, 't_crop').setScale(3).setDepth(0);
+                if (cell === 4) { // Tree (1024px)
+                    const tree = this.trees.create(px, py - 40, 'tree').setScale(0.15).setDepth(py + 40); // Slightly larger than tile
+                    tree.body.setSize(60, 60).setOffset(450, 800); // Adjust collision for high-res
+                } else if (cell === 5) { // Crystal (1024px)
+                    const c = this.collectibles.create(px, py, 'crystal').setScale(0.08).setDepth(py);
+                    c.itemId = 'H';
+                    this.tweens.add({ targets: c, alpha: 0.7, scale: 0.09, duration: 1500, yoyo: true, repeat: -1 });
+                } else if (cell === 6) { // Pillar (1024px)
+                    const p = this.collectibles.create(px, py - 30, 'pillar').setScale(0.1).setDepth(py);
+                    p.itemId = 'O';
                 }
             }
         }
         
-        // Player
-        this.player = this.physics.add.sprite(20 * this.tileSize, 22 * this.tileSize, 'player_d1').setScale(3);
-        this.player.body.setSize(10, 8).setOffset(3, 8);
-        
-        // Physics Boundaries
-        this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
+        this.player = this.physics.add.sprite(4 * this.tileSize, 3 * this.tileSize, 'player', 0).setScale(0.2).setDepth(3 * this.tileSize);
+        this.player.body.setSize(200, 200).setOffset(150, 280);
         this.player.setCollideWorldBounds(true);
-        this.physics.add.collider(this.player, this.walls); 
-        this.physics.add.collider(this.player, this.trees); 
-        if (this.spark) this.physics.add.collider(this.player, this.spark);
-        if (this.master) this.physics.add.collider(this.player, this.master);
+        
+        this.physics.add.collider(this.player, this.walls);
+        this.physics.add.collider(this.player, this.trees);
+        
+        // Item Collection Logic
+        this.physics.add.overlap(this.player, this.collectibles, (p, item) => {
+            if (window.addItem) {
+                window.addItem(item.itemId, 1);
+                window.gainXP(20);
+                
+                // Visual feedback
+                const text = this.add.text(item.x, item.y - 50, `+1 ${item.itemId}`, { fontSize: '24px', fill: '#d4af37', stroke: '#000', strokeThickness: 4 }).setDepth(1000);
+                this.tweens.add({ targets: text, y: text.y - 100, alpha: 0, duration: 1000, onComplete: () => text.destroy() });
+                
+                item.destroy();
+            }
+        });
 
-        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
-        this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
-        this.cameras.main.setZoom(1.0);
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        this.cameras.main.setZoom(1.8);
+        
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys('W,A,S,D,F');
+        this.keys = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            right: Phaser.Input.Keyboard.KeyCodes.D,
+            action: Phaser.Input.Keyboard.KeyCodes.F
+        });
 
-        // Animation definitions — higher frame rate for smoother walking
-        this.anims.create({ key: 'walk-down',  frames: [{ key: 'player_d2' }, { key: 'player_d1' }, { key: 'player_d3' }, { key: 'player_d1' }], frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk-up',    frames: [{ key: 'player_u2' }, { key: 'player_u1' }, { key: 'player_u3' }, { key: 'player_u1' }], frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk-left',  frames: [{ key: 'player_l2' }, { key: 'player_l1' }, { key: 'player_l2' }, { key: 'player_l1' }], frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk-right', frames: [{ key: 'player_r2' }, { key: 'player_r1' }, { key: 'player_r2' }, { key: 'player_r1' }], frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'idle-down',  frames: [{ key: 'player_d1' }], frameRate: 1 });
-        this.anims.create({ key: 'idle-up',    frames: [{ key: 'player_u1' }], frameRate: 1 });
-        this.anims.create({ key: 'idle-left',  frames: [{ key: 'player_l1' }], frameRate: 1 });
-        this.anims.create({ key: 'idle-right', frames: [{ key: 'player_r1' }], frameRate: 1 });
+        window.pScene = this;
+    }
+
+    update() {
+        if (window.inChat || window.gameState !== 'GAME') { this.player.setVelocity(0, 0); return; }
+
+        const speed = 250;
+        let vx = 0, vy = 0, anim = null;
+
+        if (this.keys.left.isDown || this.cursors.left.isDown) { vx = -speed; anim = 'walk-left'; }
+        else if (this.keys.right.isDown || this.cursors.right.isDown) { vx = speed; anim = 'walk-right'; }
         
-        this.input.keyboard.removeCapture('W,A,S,D,F,UP,DOWN,LEFT,RIGHT,SPACE');
-
-        this.interactionTarget = null;
-        this.fPrompt = this.add.text(0, 0, 'กด [F] เพื่อโต้ตอบ', {
-            fontSize: '14px', fill: '#FFD700',
-            backgroundColor: '#000000cc', padding: { x: 8, y: 4 },
-            fontFamily: 'VT323'
-        }).setOrigin(0.5).setVisible(false).setDepth(100);
-
-        console.log('[CHEMMA] Scene created — player at', this.player.x, this.player.y);
-    }
-
-    addInteraction(obj, type) {
-        obj.interactType = type;
-    }
-
-    update(time, delta) {
-        if (window.inChat || window.gameState === 'BATTLE') return;
-
-        const speed = 180;
-        let vx = 0;
-        let vy = 0;
-        let moving = false;
-
-        // Gather input — allows diagonal movement!
-        const left  = this.keys.A.isDown || this.cursors.left.isDown;
-        const right = this.keys.D.isDown || this.cursors.right.isDown;
-        const up    = this.keys.W.isDown || this.cursors.up.isDown;
-        const down  = this.keys.S.isDown || this.cursors.down.isDown;
-
-        if (left)  vx -= 1;
-        if (right) vx += 1;
-        if (up)    vy -= 1;
-        if (down)  vy += 1;
-
-        // Normalize diagonal speed (prevents faster speed at 45°)
-        if (vx !== 0 && vy !== 0) {
-            const diag = speed * 0.707; // ~1/√2
-            vx *= diag;
-            vy *= diag;
-        } else {
-            vx *= speed;
-            vy *= speed;
-        }
-
+        if (this.keys.up.isDown || this.cursors.up.isDown) { vy = -speed; if (!anim) anim = 'walk-up'; }
+        else if (this.keys.down.isDown || this.cursors.down.isDown) { vy = speed; if (!anim) anim = 'walk-down'; }
+        
         this.player.setVelocity(vx, vy);
+        this.player.setDepth(this.player.y + 100);
 
-        // Determine facing direction & play animation
-        if (vx !== 0 || vy !== 0) {
-            moving = true;
-            // Pick dominant direction for animation
-            if (Math.abs(vx) >= Math.abs(vy)) {
-                this.facing = vx < 0 ? 'left' : 'right';
-            } else {
-                this.facing = vy < 0 ? 'up' : 'down';
-            }
-            this.player.anims.play(`walk-${this.facing}`, true);
-        } else {
-            this.player.anims.play(`idle-${this.facing}`, true);
+        if (vx !== 0 || vy !== 0) this.player.play(anim, true);
+        else this.player.anims.stop();
+
+        // Action key (F) for talk trigger (placeholder for NPC interaction)
+        if (Phaser.Input.Keyboard.JustDown(this.keys.action)) {
+            // Check proximity to NPC points or triggers
+            if (window.openChat) window.openChat();
         }
 
-        // Dynamic depth sorting — walk behind/in front of trees
-        this.player.setDepth(this.player.y);
-
-        // NPC Interaction Checks
-        this.interactionTarget = null;
-        this.fPrompt.setVisible(false);
-
-        if (this.spark) {
-            const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.spark.x, this.spark.y);
-            if (d < 90) {
-                this.interactionTarget = 'ORACLE';
-                this.fPrompt.setPosition(this.spark.x, this.spark.y - 50).setVisible(true);
-            }
-        }
-        
-        if (this.master && !this.interactionTarget) {
-            const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.master.x, this.master.y);
-            if (d < 90) {
-                this.interactionTarget = 'BATTLE';
-                this.fPrompt.setPosition(this.master.x, this.master.y - 50).setVisible(true);
-            }
-        }
-
-        if (Phaser.Input.Keyboard.JustDown(this.keys.F) && this.interactionTarget) {
-            if (this.interactionTarget === 'ORACLE') window.openChat();
-            else if (this.interactionTarget === 'BATTLE') window.startBattle();
-        }
-    }
-
-    generateAllTextures() {
-        const keys = Object.keys(ArtData);
-        console.log(`[CHEMMA] Generating ${keys.length} textures...`);
-        for (const key of keys) {
-            this.generateTexture(key, ArtData[key]);
-        }
-        console.log(`[CHEMMA] All ${keys.length} textures generated successfully.`);
-    }
-
-    generateTexture(key, data) {
-        const h = data.length;
-        const w = data[0].length;
-        
-        // Use Phaser's native Graphics API — the standard way to create textures
-        const gfx = this.make.graphics({ add: false });
-        
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-                const ch = data[y][x];
-                if (ch !== '0' && P[ch]) {
-                    gfx.fillStyle(parseInt(P[ch].slice(1), 16), 1);
-                    gfx.fillRect(x, y, 1, 1);
-                }
-            }
-        }
-        
-        gfx.generateTexture(key, w, h);
-        gfx.destroy();
+        this.waterTiles.forEach(w => {
+            w.tilePositionX += 0.8;
+            w.tilePositionY += 0.4;
+        });
     }
 }

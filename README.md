@@ -6,4 +6,5 @@ How to clone this project Perfectly !!
 4.type "npm install"
 5.Get into your backend folder by type "cd ../backend" in your IDE terminal
 6.type "pip install -r requirements.txt"
-7.Setup .env by copy .env.example and add your own API keys
+7. Setup .env by copy .env.example and add your own API keys
+8. สำหรับรายละเอียดระบบ Dashboard และ Codex ใหม่ ดูได้ที่ [DASHBOARD_DOCS.md](./DASHBOARD_DOCS.md)

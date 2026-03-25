@@ -15,3 +15,28 @@ export async function callGeminiAPI(prompt, history = []) {
         return "💥 คลื่นพลังงานเวทมนตร์ถูกตัดขาด ไม่สามารถติดต่อกับหอสมุดเวทได้ในขณะนี้";
     }
 }
+
+export async function saveUserProfile(profile) {
+    try {
+        const response = await fetch("/api/user/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(profile)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Save Error:", error);
+        return { status: "error", message: error.message };
+    }
+}
+
+export async function loadUserProfile(userId = "default_student") {
+    try {
+        const response = await fetch(`/api/user/load/${userId}`);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Load Error:", error);
+        return { status: "error", message: error.message };
+    }
+}

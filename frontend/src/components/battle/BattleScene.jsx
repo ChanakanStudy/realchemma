@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ELEMENTS, RECIPES, ULTIMATES, MAX_TIME, matchRecipe, calculateQTEResult } from '../../systems/battle/battleLogic';
+import { ELEMENTS, RECIPES, MAX_TIME, matchRecipe, calculateQTEResult } from '../../services/alchemyService';
+import { addXP } from '../../core/userState';
 import EnemyPanel from './EnemyPanel';
 import PlayerPanel from './PlayerPanel';
 import ActionMenu from './ActionMenu';
 import BattleLog from './BattleLog';
 
-export default function BattleScene({ onQuitBattle }) {
+export default function BattleScene({ userData, setUserData, onQuitBattle }) {
   const [phase, setPhase] = useState(1);
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
   const [turn, setTurn] = useState(1);
-  const [playerHP, setPlayerHP] = useState(300);
   const [monsterHP, setMonsterHP] = useState(1500);
   const [monsterStatuses, setMonsterStatuses] = useState([]);
   const [crucible, setCrucible] = useState([]);
-  const [inventory, setInventory] = useState([]);
   const [logs, setLogs] = useState(['AN ANCIENT HOMUNCULUS BLOCKS YOUR PATH!']);
 
   // QTE States (Using Ref for Real-time accuracy)
@@ -110,7 +108,10 @@ export default function BattleScene({ onQuitBattle }) {
     const matchedRecipe = matchRecipe(crucible);
 
     if (matchedRecipe) {
-      setInventory([...inventory, matchedRecipe]);
+      setUserData(prev => {
+        const nextInv = [...prev.inventory, matchedRecipe];
+        return { ...prev, inventory: nextInv };
+      });
       addLog(`BREWED: ${matchedRecipe.name}`);
       setAttackEffect('craft');
       setTimeout(() => setAttackEffect(null), 500);
@@ -150,10 +151,12 @@ export default function BattleScene({ onQuitBattle }) {
   }, [addLog, endGame]);
 
   const initiateThrow = (index) => {
-    const compound = inventory[index];
-    const newInv = [...inventory];
-    newInv.splice(index, 1);
-    setInventory(newInv);
+    const compound = userData.inventory[index];
+    setUserData(prev => {
+      const newInv = [...prev.inventory];
+      newInv.splice(index, 1);
+      return { ...prev, inventory: newInv };
+    });
 
     const newQte = { active: true, progress: 0, direction: 1, item: compound };
     latestQte.current = newQte;
@@ -201,10 +204,10 @@ export default function BattleScene({ onQuitBattle }) {
     setTimeout(() => setScreenShake(''), 500);
 
     const dmg = Math.floor(Math.random() * 30) + 40;
-    setPlayerHP(prev => Math.max(0, prev - dmg));
+    setUserData(prev => ({ ...prev, hp: Math.max(0, prev.hp - dmg) }));
     addLog(`HOMUNCULUS STRIKES! YOU TOOK ${dmg} DMG.`);
 
-    if (playerHP - dmg <= 0) {
+    if (userData.hp - dmg <= 0) {
       endGame(false, 'YOU HAVE FALLEN...');
       return;
     }
@@ -217,8 +220,9 @@ export default function BattleScene({ onQuitBattle }) {
 
   const restartGame = () => {
     setPhase(1); setTurn(1); setTimeLeft(MAX_TIME);
-    setPlayerHP(300); setMonsterHP(1500);
-    setInventory([]); setCrucible([]); setMonsterStatuses([]);
+    setUserData(prev => ({ ...prev, hp: 300 }));
+    setCrucible([]);
+    setMonsterHP(1500); setMonsterStatuses([]);
     setLogs(['THE BATTLE BEGINS ANEW!']);
     setQteResult(null);
     setAttackEffect(null);
@@ -248,7 +252,7 @@ export default function BattleScene({ onQuitBattle }) {
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)` }} />
 
         {/* --- WORKBENCH HUD --- */}
-        <PlayerPanel phase={phase} timeLeft={timeLeft} playerHP={playerHP} />
+        <PlayerPanel phase={phase} timeLeft={timeLeft} playerHP={userData.hp} />
 
         {/* --- TABLETOP AREA --- */}
         <div className="flex-1 flex p-4 gap-6 relative z-10">
@@ -280,11 +284,11 @@ export default function BattleScene({ onQuitBattle }) {
           <ActionMenu
             phase={phase}
             crucible={crucible}
-            inventory={inventory}
+            inventory={userData.inventory}
             monsterStatuses={monsterStatuses}
             throwingItem={throwingItem}
             qte={qte}
-            playerHP={playerHP}
+            playerHP={userData.hp}
             handleNextPhase={handleNextPhase}
             addElement={addElement}
             setCrucible={setCrucible}
