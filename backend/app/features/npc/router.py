@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.shared.models import ChatMessage, NPCChatRequest
 from app.features.npc.service import get_npc_response
 import logging

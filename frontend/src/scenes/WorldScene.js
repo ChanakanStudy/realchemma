@@ -221,18 +221,29 @@ export default class WorldScene extends Phaser.Scene {
         // Handle interaction input
         if (Phaser.Input.Keyboard.JustDown(this.keys.F)) {
             console.log(`[Phaser] F Key Pressed! Target: ${this.interactionTarget}`);
+            
             if (this.interactionTarget === 'oracle') {
-                eventBus.emit(EVENTS.OPEN_CHAT);      
+                if (window.openChat) {
+                    window.openChat();
+                } else {
+                    eventBus.emit(EVENTS.OPEN_CHAT);
+                }
             } else if (this.interactionTarget === 'battle_master') {
-                eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
-                npcId: 'battle_master',
-                name: 'Battle Master',
-                message: 'พร้อมจะพิสูจน์ฝีมือแล้วหรือยัง?',
-                choices: [
-                    { id: 'fight', label: 'สู้' },
-                    { id: 'leave', label: 'ยังไม่สู้' }
+                const dialogueData = {
+                    npcId: 'battle_master',
+                    name: 'Battle Master',
+                    message: 'พร้อมจะพิสูจน์ฝีมือแล้วหรือยัง?',
+                    choices: [
+                        { id: 'fight', label: 'สู้' },
+                        { id: 'leave', label: 'ยังไม่สู้' }
                     ]
-                });
+                };
+
+                if (window.openDialogue) {
+                    window.openDialogue(dialogueData);
+                } else {
+                    eventBus.emit(EVENTS.OPEN_NPC_POPUP, dialogueData);
+                }
             }
         }
     }

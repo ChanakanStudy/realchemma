@@ -79,11 +79,9 @@ NPC:
 RESPONSE STYLE
 ====================================
 
-- 2–5 sentences
-- Simple language
-- Easy for students
-- No complex jargon
-- Can give examples
+- 1–3 sentences (Keep it snappy!)
+- Simple, clear, and high-readability language
+- Use a new line for important facts or examples
 - MUST ALWAYS respond in Thai language (ภาษาไทย)
 
 ====================================
@@ -118,7 +116,7 @@ Create a flexible AI NPC that:
 - Keeps the conversation within chemistry
 - Helps the player learn through interaction"""
 
-async def get_npc_response(user_message: str, history: list = None, model: str = "google/gemini-2.5-flash") -> str:
+async def get_npc_response(user_message: str, history: list = None, model: str = "google/gemini-flash-1.5") -> str:
     """
     Sends a message to the OpenRouter API and retrieves the NPC's response.
     

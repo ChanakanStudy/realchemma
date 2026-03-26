@@ -7,6 +7,7 @@ import os
 from app.features.battle.router import router as battle_router
 from app.features.npc.router import router as npc_router
 from app.features.questions.router import router as questions_router
+from app.routes import user
 
 app = FastAPI(title="CHEMMA API", version="1.0.0")
 

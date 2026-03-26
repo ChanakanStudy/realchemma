@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PeriodicTable from '../codex/PeriodicTable';
 import { ELEMENTS, RECIPES } from '../../services/alchemyService';
+import { formatFormula } from '../../core/utils';
 
 export default function InventoryUI({
   activeTab = 'backpack',
@@ -171,13 +172,7 @@ function ItemsTab({ userData }) {
   );
 }
 
-// Helper to render chemical formulas with subscripts
-const formatFormula = (formulaStr) => {
-  if (!formulaStr) return '';
-  return formulaStr.split(/(\d+)/).map((part, i) => 
-    /\d+/.test(part) ? <sub key={i}>{part}</sub> : part
-  );
-};
+// Helper to render chemical formulas with subscripts (REMOVED: Moved to utils.js)
 
 function ItemCard({ item, info, isCompound = false }) {
   return (
