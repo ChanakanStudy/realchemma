@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GameProvider, useGameContext } from './core/GameContext';
 import { GAME_STATES } from './core/constants';
 import { createGame } from './features/world/phaserGame';
@@ -9,9 +9,36 @@ import BattleScreen from './features/battle/BattleScreen';
 import ChatScreen from './features/chat/ChatScreen';
 import DialogueScreen from './features/dialogue/DialogueScreen';
 
+// Dashboard Imports
+import InventoryUI from './components/inventory/InventoryUI';
+import { loadGameState } from './core/userState';
+
 function GameContent() {
   const { gameState } = useGameContext();
   const gameInitialized = useRef(false);
+  
+  // Dashboard State
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [activeTab, setActiveTab] = useState('backpack');
+  const [userData, setUserData] = useState(loadGameState());
+
+  // Toggle Dashboard with 'B' key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key.toLowerCase() === 'b') {
+        if (showDashboard) {
+          setShowDashboard(false);
+        } else {
+          setUserData(loadGameState()); // Refresh data when opening
+          setShowDashboard(true);
+        }
+      }
+      if (e.key === 'Escape') setShowDashboard(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDashboard]);
 
   // Initialize Phaser once game state becomes GAME
   useEffect(() => {
@@ -38,6 +65,16 @@ function GameContent() {
         <div id="battle-root" style={{ display: 'block', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 100 }}>
           <BattleScreen />
         </div>
+      )}
+
+      {/* --- Dashboard (Inventory, Codex, Quests) --- */}
+      {showDashboard && (
+        <InventoryUI 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          userData={userData}
+          onClose={() => setShowDashboard(false)} 
+        />
       )}
 
       <div id="flashScreen" className="white-flash"></div>
