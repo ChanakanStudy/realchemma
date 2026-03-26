@@ -1,0 +1,70 @@
+{
+    "default_student": {
+        "userId": "default_student",
+        "level": 2,
+        "xp": 50,
+        "nextLevelXP": 150,
+        "hp": 300,
+        "mp": 100,
+        "inventory": [
+            {
+                "id": "H",
+                "quantity": 10
+            },
+            {
+                "id": "O",
+                "quantity": 10
+            },
+            {
+                "id": "Na",
+                "quantity": 10
+            },
+            {
+                "id": "Cl",
+                "quantity": 10
+            },
+            {
+                "id": "C",
+                "quantity": 10
+            },
+            {
+                "id": "H2O",
+                "quantity": 3
+            },
+            {
+                "id": "NaCl",
+                "quantity": 2
+            }
+        ],
+        "quests": [
+            {
+                "id": "intro",
+                "title": "\u0e1b\u0e10\u0e21\u0e19\u0e34\u0e40\u0e17\u0e28\u0e19\u0e31\u0e01\u0e40\u0e25\u0e48\u0e19\u0e41\u0e23\u0e48\u0e41\u0e1b\u0e23\u0e18\u0e32\u0e15\u0e38",
+                "status": "active",
+                "objective": "\u0e04\u0e38\u0e22\u0e01\u0e31\u0e1a Lab Assistant"
+            }
+        ],
+        "discovered": [
+            "H",
+            "He",
+            "Li",
+            "Be",
+            "B",
+            "C",
+            "N",
+            "O",
+            "Fe",
+            "Au",
+            "Ag",
+            "Cu",
+            "Hg",
+            "Pb",
+            "Ne"
+        ],
+        "stats": {
+            "matches": 0,
+            "wins": 0,
+            "tempMixes": 0
+        }
+    }
+}
