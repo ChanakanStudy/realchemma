@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGameContext } from '../../core/GameContext';
 import { callGeminiAPI } from './chatAPI';
+import { formatFormula } from '../../core/utils';
 
 export default function ChatScreen() {
     const { chatOpen, setChatOpen } = useGameContext();
@@ -63,9 +64,10 @@ export default function ChatScreen() {
             <div className="chat-box" id="chatHistory" ref={chatHistoryRef}>
                 {chatMessages.map((msg, i) => (
                     <div key={i} className={msg.type === 'user' ? 'message-row user-row' : 'message-row bot-row'}>
-                        <div className={msg.type === 'user' ? 'message user-msg' : 'message bot-msg'}>
-                            {msg.text}
-                        </div>
+                        <div 
+                            className={msg.type === 'user' ? 'message user-msg' : 'message bot-msg'}
+                            dangerouslySetInnerHTML={{ __html: formatFormula(msg.text) }}
+                        />
                     </div>
                 ))}
                 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PeriodicTable from '../codex/PeriodicTable';
 import { ELEMENTS, RECIPES } from '../../features/battle/battleLogic';
+import { formatFormula } from '../../core/utils';
 
 
 export default function InventoryUI({
@@ -94,7 +95,7 @@ function CompoundCodex({ discovered }) {
                 {isFound ? '🧪' : '❓'}
               </div>
               <div className="recipe-info">
-                <h4 className="recipe-name">{isFound ? recipe.name : '???'}</h4>
+                <h4 className="recipe-name" dangerouslySetInnerHTML={{ __html: isFound ? formatFormula(recipe.name) : '???' }} />
                 <div className="recipe-formula">
                   {isFound ? (
                     Object.entries(recipe.formula).map(([el, qty]) => (
@@ -176,10 +177,8 @@ function ItemCard({ item, info, isCompound = false }) {
   return (
     <div className={`item-card ${isCompound ? 'compound-card' : ''}`}>
       <div className="item-qty">x{item.quantity}</div>
-      <div className="item-symbol" style={{ color: info.color }}>
-        {isCompound ? (info.id || item.id) : item.id}
-      </div>
-      <div className="item-name">{info.name}</div>
+      <div className="item-symbol" style={{ color: info.color }} dangerouslySetInnerHTML={{ __html: formatFormula(info.id || item.id) }} />
+      <div className="item-name" dangerouslySetInnerHTML={{ __html: formatFormula(info.name) }} />
     </div>
   );
 }
