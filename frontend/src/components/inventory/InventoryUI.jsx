@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PeriodicTable from '../codex/PeriodicTable';
-import { ELEMENTS, RECIPES } from '../../services/alchemyService';
+import { ELEMENTS, RECIPES } from '../../features/battle/battleLogic';
+
 
 export default function InventoryUI({
   activeTab = 'backpack',
