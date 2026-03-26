@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GameProvider, useGameContext } from './core/GameContext';
+import { AuthProvider, useAuth } from './core/AuthContext';
 import { GAME_STATES } from './core/constants';
 import { createGame } from './features/world/phaserGame';
 
+import LoginScreen from './features/login/LoginScreen';
 import MenuScreen from './features/menu/MenuScreen';
 import WorldScreen from './features/world/WorldScreen';
 import BattleScreen from './features/battle/BattleScreen';
@@ -15,6 +17,7 @@ import { loadGameState } from './core/userState';
 
 function GameContent() {
   const { gameState } = useGameContext();
+  const { currentPlayer, isLoading } = useAuth();
   const gameInitialized = useRef(false);
   
   // Dashboard State
@@ -47,6 +50,12 @@ function GameContent() {
       createGame('game-container');
     }
   }, [gameState]);
+
+  // While checking localStorage for an existing session — show nothing to avoid flicker
+  if (isLoading) return null;
+
+  // Not logged in → show Login screen (blocks ALL game content)
+  if (!currentPlayer) return <LoginScreen />;
 
   return (
     <>
@@ -84,8 +93,11 @@ function GameContent() {
 
 export default function App() {
   return (
-    <GameProvider>
-      <GameContent />
-    </GameProvider>
+    <AuthProvider>
+      <GameProvider>
+        <GameContent />
+      </GameProvider>
+    </AuthProvider>
   );
 }
+

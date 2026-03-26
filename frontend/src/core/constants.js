@@ -4,6 +4,7 @@
  */
 
 export const GAME_STATES = {
+    LOGIN: 'LOGIN',      // ← Initial state — shows LoginScreen
     MENU: 'MENU',
     GAME: 'GAME',
     BATTLE: 'BATTLE',
