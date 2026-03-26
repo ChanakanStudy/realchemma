@@ -93,7 +93,7 @@ function CompoundCodex({ discovered }) {
                 {isFound ? '🧪' : '❓'}
               </div>
               <div className="recipe-info">
-                <h4 className="recipe-name">{isFound ? recipe.name : '???'}</h4>
+                <h4 className="recipe-name">{isFound ? formatFormula(recipe.name) : '???'}</h4>
                 <div className="recipe-formula">
                   {isFound ? (
                     Object.entries(recipe.formula).map(([el, qty]) => (
@@ -171,14 +171,22 @@ function ItemsTab({ userData }) {
   );
 }
 
+// Helper to render chemical formulas with subscripts
+const formatFormula = (formulaStr) => {
+  if (!formulaStr) return '';
+  return formulaStr.split(/(\d+)/).map((part, i) => 
+    /\d+/.test(part) ? <sub key={i}>{part}</sub> : part
+  );
+};
+
 function ItemCard({ item, info, isCompound = false }) {
   return (
     <div className={`item-card ${isCompound ? 'compound-card' : ''}`}>
       <div className="item-qty">x{item.quantity}</div>
       <div className="item-symbol" style={{ color: info.color }}>
-        {isCompound ? (info.id || item.id) : item.id}
+        {isCompound ? formatFormula(info.id || item.id) : item.id}
       </div>
-      <div className="item-name">{info.name}</div>
+      <div className="item-name">{isCompound ? formatFormula(info.name) : info.name}</div>
     </div>
   );
 }

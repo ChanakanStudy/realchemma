@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.models.schemas import ChatRequest
-from app.services.question_service import get_oracle_response
+from app.shared.models import ChatRequest
+from app.features.questions.service import get_oracle_response
 
 router = APIRouter()
 
