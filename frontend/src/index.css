@@ -1484,3 +1484,11 @@ body, html {
 .codex-content.embedded {
     padding: 0;
 }
+/* Subscript styling for chemical formulas */
+sub {
+    font-size: 0.65em;
+    vertical-align: sub;
+    bottom: -0.1em;
+    position: relative;
+}
+
