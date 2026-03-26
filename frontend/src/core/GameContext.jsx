@@ -16,19 +16,23 @@ export const GameProvider = ({ children }) => {
                 setGameState(newState);
             }),
             eventBus.on(EVENTS.OPEN_CHAT, () => {
+                console.log('[React] Received OPEN_CHAT event');
                 setChatOpen(true);
             }),
             eventBus.on(EVENTS.CLOSE_CHAT, () => {
+                console.log('[React] Received CLOSE_CHAT event');
                 setChatOpen(false);
             }),
             eventBus.on(EVENTS.START_BATTLE, () => {
+                console.log('[React] Received START_BATTLE event');
                 setGameState(GAME_STATES.BATTLE);
             }),
             eventBus.on(EVENTS.QUIT_BATTLE, () => {
+                console.log('[React] Received QUIT_BATTLE event');
                 setGameState(GAME_STATES.GAME);
             }),
             eventBus.on(EVENTS.OPEN_NPC_POPUP, (data) => {
-                console.log('POPUP EVENT', data);
+                console.log('[React] Received OPEN_NPC_POPUP event', data);
                 setNpcDialogue(data);
                 setGameState(GAME_STATES.DIALOGUE);
             }),

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GameProvider, useGameContext } from './core/GameContext';
 import { GAME_STATES } from './core/constants';
-import { createGame } from './features/world/phaserGame';
+import { createGame } from './game/phaserGame';
 
 import MenuScreen from './features/menu/MenuScreen';
 import WorldScreen from './features/world/WorldScreen';
@@ -14,7 +14,7 @@ import InventoryUI from './components/inventory/InventoryUI';
 import { loadGameState } from './core/userState';
 
 function GameContent() {
-  const { gameState } = useGameContext();
+  const { gameState, setChatOpen, setNpcDialogue, setGameState: setGlobalGameState } = useGameContext();
   const gameInitialized = useRef(false);
   
   // Dashboard State
@@ -25,6 +25,12 @@ function GameContent() {
   // Toggle Dashboard with 'B' key
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't toggle if typing in a text field
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+      
+      // Don't toggle if in a dialogue menu
+      if (gameState === GAME_STATES.DIALOGUE) return;
+
       if (e.key.toLowerCase() === 'b') {
         if (showDashboard) {
           setShowDashboard(false);
@@ -38,7 +44,7 @@ function GameContent() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showDashboard]);
+  }, [showDashboard, gameState]); // Added gameState to dependencies
 
   // Initialize Phaser once game state becomes GAME
   useEffect(() => {
@@ -47,6 +53,20 @@ function GameContent() {
       createGame('game-container');
     }
   }, [gameState]);
+
+  // Expose bridge functions for Phaser interaction
+  useEffect(() => {
+    window.openChat = () => {
+      console.log("[CHEMMA] Open Chat Bridge Triggered");
+      setChatOpen(true);
+    };
+    
+    window.openDialogue = (data) => {
+        console.log("[CHEMMA] Open Dialogue Bridge Triggered", data);
+        setNpcDialogue(data);
+        setGlobalGameState(GAME_STATES.DIALOGUE);
+    };
+  }, [setChatOpen, setNpcDialogue, setGlobalGameState]);
 
   return (
     <>
@@ -75,6 +95,13 @@ function GameContent() {
           userData={userData}
           onClose={() => setShowDashboard(false)} 
         />
+      )}
+
+      {/* --- Controls Hint (Only show in-game) --- */}
+      {!showDashboard && gameState !== GAME_STATES.MENU && (
+        <div className="controls-hint">
+            กดปุ่ม <span style={{ color: '#d4af37', fontWeight: 'bold' }}>[ B ]</span> เพื่อเปิดกระเป๋า / Codex
+        </div>
       )}
 
       <div id="flashScreen" className="white-flash"></div>

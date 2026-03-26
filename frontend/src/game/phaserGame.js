@@ -11,8 +11,7 @@ export function createGame(containerId) {
     width: window.innerWidth,
     height: window.innerHeight,
     parent: containerId,
-    pixelArt: false,
-    antialias: true,
+    pixelArt: true,
     physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
     scene: WorldScene,
   };
