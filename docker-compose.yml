@@ -6,7 +6,29 @@ services:
     volumes:
       - ./backend:/app
     environment:
+      - DATABASE_URL=postgresql://chemma_user:chemma_password@db:5432/chemma_db
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SECRET_KEY=chanakanstudy
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: chemma_user
+      POSTGRES_PASSWORD: chemma_password
+      POSTGRES_DB: chemma_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chemma_user -d chemma_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: always
 
   frontend:
@@ -16,3 +38,6 @@ services:
     depends_on:
       - backend
     restart: always
+
+volumes:
+  pgdata:

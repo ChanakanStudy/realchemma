@@ -10,6 +10,11 @@ from app.features.questions.router import router as questions_router
 
 app = FastAPI(title="CHEMMA API", version="1.0.0")
 
+from app.core.database import engine, Base
+from app.models.user import User
+
+Base.metadata.create_all(bind=engine)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

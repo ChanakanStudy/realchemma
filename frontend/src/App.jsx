@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+
+
 import { GameProvider, useGameContext } from './core/GameContext';
 import { AuthProvider, useAuth } from './core/AuthContext';
 import { GAME_STATES } from './core/constants';
@@ -100,4 +102,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
