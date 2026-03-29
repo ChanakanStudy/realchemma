@@ -8,6 +8,7 @@ pydantic
 sqlalchemy
 google-auth
 python-jose[cryptography]
-passlib[bcrypt]
-psycopg2-binary
+argon2-cffi
+passlib
 email-validator
+psycopg2-binary

@@ -11,8 +11,14 @@ services:
       - SECRET_KEY=chanakanstudy
     depends_on:
       db:
-        condition: service_healthy
-    restart: always
+        condition: service_started
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   db:
     image: postgres:15-alpine
