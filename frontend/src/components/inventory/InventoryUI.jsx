@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import PeriodicTable from '../codex/PeriodicTable';
 import { ELEMENTS, RECIPES } from '../../features/battle/battleLogic';
 import { formatFormula } from '../../core/utils';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 
 export default function InventoryUI({
@@ -19,10 +21,10 @@ export default function InventoryUI({
   ];
 
   return (
-    <div className="rpg-overlay dashboard-overlay">
+    <div className="rpg-overlay dashboard-overlay animate-scale-up">
       <div className="dashboard-sidebar">
         <div className="sidebar-header">
-          <div className="sidebar-avatar">🧙</div>
+          <div className="sidebar-avatar">{userData.level >= 10 ? '🧙‍♂️' : '🧪'}</div>
           <div className="sidebar-info">
             <span className="sidebar-name">Alchemist</span>
             <span className="sidebar-lvl">LVL {userData.level}</span>
@@ -69,8 +71,8 @@ export default function InventoryUI({
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
-        <div className="content-body">
-          {activeTab === 'backpack' && <ItemsTab userData={userData} />}
+        <div className="content-body custom-scrollbar">
+          {activeTab === 'backpack' && <ItemsTab userData={userData} onClose={onClose} />}
           {activeTab === 'codex' && (
             codexTab === 'elements'
               ? <PeriodicTable discoveredElements={userData.discovered} embedded={true} />
@@ -85,7 +87,7 @@ export default function InventoryUI({
 
 function CompoundCodex({ discovered }) {
   return (
-    <div className="compound-codex">
+    <div className="compound-codex animate-fade-in">
       <div className="recipe-grid">
         {RECIPES.map(recipe => {
           const isFound = discovered.includes(recipe.id);
@@ -109,10 +111,13 @@ function CompoundCodex({ discovered }) {
                   )}
                 </div>
                 {isFound && (
-                  <div className="recipe-stats">
-                    <span className="stat-dmg">DMG: {recipe.damage}</span>
-                    <span className="stat-status">{recipe.status}</span>
-                  </div>
+                  <>
+                    <div className="recipe-stats">
+                      <span className="stat-dmg">DMG: {recipe.damage}</span>
+                      <span className="stat-status">{recipe.status}</span>
+                    </div>
+                    {recipe.desc && <p className="recipe-desc">{recipe.desc}</p>}
+                  </>
                 )}
               </div>
             </div>
@@ -127,7 +132,7 @@ function CompoundCodex({ discovered }) {
  * ItemsTab
  * Splits the inventory into Elements and Compounds sections.
  */
-function ItemsTab({ userData }) {
+function ItemsTab({ userData, onClose }) {
   const elements = userData.inventory.filter(item =>
     ELEMENTS.find(e => e.symbol === item.id)
   );
@@ -137,15 +142,15 @@ function ItemsTab({ userData }) {
   );
 
   return (
-    <div className="inventory-scroll">
+    <div className="inventory-scroll animate-fade-in">
       {/* --- ELEMENTS SECTION --- */}
       {elements.length > 0 && (
         <section className="inventory-section">
           <h3 className="section-subtitle">ELEMENTS (ธาตุ)</h3>
           <div className="grid-container">
             {elements.map(item => {
-              const info = ELEMENTS.find(e => e.symbol === item.id) || { name: item.id, color: '#aaa' };
-              return <ItemCard key={item.id} item={item} info={info} />;
+              const info = ELEMENTS.find(e => e.symbol === item.id) || { name: item.id, color: '#aaa', desc: 'ข้อมูลธาตุลึกลับ' };
+              return <ItemCard key={item.id} item={item} info={info} onCloseDashboard={onClose} />;
             })}
           </div>
         </section>
@@ -157,8 +162,8 @@ function ItemsTab({ userData }) {
           <h3 className="section-subtitle">COMPOUNDS (สารประกอบ)</h3>
           <div className="grid-container">
             {compounds.map(item => {
-              const info = RECIPES.find(r => r.id === item.id) || { name: item.id, color: '#c084fc' };
-              return <ItemCard key={item.id} item={item} info={info} isCompound={true} />;
+              const info = RECIPES.find(r => r.id === item.id) || { name: item.id, color: '#c084fc', desc: 'สารประกอบเคมีที่ยังไม่ถูกระบุ' };
+              return <ItemCard key={item.id} item={item} info={info} isCompound={true} onCloseDashboard={onClose} />;
             })}
           </div>
         </section>
@@ -166,26 +171,40 @@ function ItemsTab({ userData }) {
 
       {userData.inventory.length === 0 && (
         <div className="empty-state">
-          <p>ไม่มีไอเทมในกระเป๋า... ออกไปสะสมธาตุเพิ่มเลย!</p>
+          <div className="empty-icon">🎒</div>
+          <p>กระเป๋าว่างเปล่า... ออกเดินทางไปสะสมธาตุเพิ่มกันเถอะ!</p>
         </div>
       )}
     </div>
   );
 }
 
-function ItemCard({ item, info, isCompound = false }) {
+function ItemCard({ item, info, isCompound = false, onCloseDashboard }) {
+  const handleClick = () => {
+    // 1. Close the dashboard first so the chat is visible
+    if (onCloseDashboard) onCloseDashboard();
+    
+    // 2. Emit event to open chat with a pre-filled prompt
+    // Use setTimeout to ensure the dashboard closure doesn't conflict with chat opening
+    setTimeout(() => {
+      eventBus.emit(EVENTS.TRIGGER_CHAT_WITH_PROMPT, `ช่วยอธิบายเกร็ดความรู้เกี่ยวกับ ${info.name} หน่อยครับ`);
+    }, 200);
+  };
+
   return (
-    <div className={`item-card ${isCompound ? 'compound-card' : ''}`}>
+    <div className={`item-card ${isCompound ? 'compound-card' : ''}`} onClick={handleClick} title="คลิกเพื่อถาม Oracle">
       <div className="item-qty">x{item.quantity}</div>
-      <div className="item-symbol" style={{ color: info.color }} dangerouslySetInnerHTML={{ __html: formatFormula(info.id || item.id) }} />
+      <div className="item-symbol" style={{ color: info.color }} dangerouslySetInnerHTML={{ __html: formatFormula(info.symbol || info.id || item.id) }} />
       <div className="item-name" dangerouslySetInnerHTML={{ __html: formatFormula(info.name) }} />
+      <div className="item-action-icon">💬</div>
+      <div className="item-glow" style={{ background: info.color }}></div>
     </div>
   );
 }
 
 function QuestsTab({ quests }) {
   return (
-    <div className="quests-list">
+    <div className="quests-list animate-fade-in">
       {quests.map(q => (
         <div key={q.id} className="quest-card">
           <div className="quest-status-icon">{q.status === 'completed' ? '✅' : '⏳'}</div>

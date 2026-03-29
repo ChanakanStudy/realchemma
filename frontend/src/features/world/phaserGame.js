@@ -13,6 +13,11 @@ export function createGame(containerId) {
     parent: containerId,
     pixelArt: true,
     physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
+    input: {
+      keyboard: {
+        capture: []
+      }
+    },
     scene: WorldScene,
   };
 

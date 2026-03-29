@@ -13,28 +13,28 @@ export const ELEMENT_CATEGORIES = {
 
 export const PERIODIC_TABLE_DATA = [
   // Row 1
-  { num: 1, symbol: 'H', name: 'Hydrogen', category: 'nonmetal', x: 1, y: 1, weight: 1.008, desc: 'The lightest element, fueling the sun and marking the start of all matter.' },
-  { num: 2, symbol: 'He', name: 'Helium', category: 'noble-gas', x: 18, y: 1, weight: 4.002, desc: 'A stable, inert gas used in balloons and cooling superconducting magnets.' },
+  { num: 1, symbol: 'H', name: 'Hydrogen', category: 'nonmetal', x: 1, y: 1, weight: 1.008, desc: 'ธาตุที่เบาที่สุดในจักรวาล เป็นเชื้อเพลิงของดวงดาวและจุดเริ่มต้นของสสารทั้งหมด' },
+  { num: 2, symbol: 'He', name: 'Helium', category: 'noble-gas', x: 18, y: 1, weight: 4.002, desc: 'แก๊สเฉื่อยที่มีความเสถียร ใช้ในลูกโป่งสวรรค์และระบบหล่อเย็นเครื่องจักรประสิทธิภาพสูง' },
   
   // Row 2
-  { num: 3, symbol: 'Li', name: 'Lithium', category: 'alkali', x: 1, y: 2, weight: 6.941, desc: 'A soft, silvery-white metal used in high-performance batteries.' },
-  { num: 4, symbol: 'Be', name: 'Beryllium', category: 'alkaline-earth', x: 2, y: 2, weight: 9.012, desc: 'A strong, lightweight metal used in aerospace and X-ray windows.' },
-  { num: 5, symbol: 'B', name: 'Boron', category: 'metalloid', x: 13, y: 2, weight: 10.81, desc: 'Used in borosilicate glass and as a crucial nutrient for plants.' },
-  { num: 6, symbol: 'C', name: 'Carbon', category: 'nonmetal', x: 14, y: 2, weight: 12.01, desc: 'The backbone of life, from diamonds to DNA.' },
-  { num: 7, symbol: 'N', name: 'Nitrogen', category: 'nonmetal', x: 15, y: 2, weight: 14.01, desc: 'Makes up 78% of Earth\'s atmosphere and is essential for fertilizers.' },
-  { num: 8, symbol: 'O', name: 'Oxygen', category: 'nonmetal', x: 16, y: 2, weight: 16.00, desc: 'A highly reactive gas essential for respiration and combustion.' },
-  { num: 9, symbol: 'F', name: 'Fluorine', category: 'nonmetal', x: 17, y: 2, weight: 19.00, desc: 'The most electronegative element, found in toothpaste and refrigerants.' },
-  { num: 10, symbol: 'Ne', name: 'Neon', category: 'noble-gas', x: 18, y: 2, weight: 20.18, desc: 'A noble gas famous for its brilliant reddish-orange glow in signs.' },
+  { num: 3, symbol: 'Li', name: 'Lithium', category: 'alkali', x: 1, y: 2, weight: 6.941, desc: 'โลหะสีขาวเงินเนื้ออ่อน นิยมใช้ในการผลิตแบตเตอรี่ประสิทธิภาพสูง' },
+  { num: 4, symbol: 'Be', name: 'Beryllium', category: 'alkaline-earth', x: 2, y: 2, weight: 9.012, desc: 'โลหะที่มีความแข็งแรงและน้ำหนักเบา ใช้ในเทคโนโลยีอวกาศและหน้าต่างรังสีเอ็กซ์' },
+  { num: 5, symbol: 'B', name: 'Boron', category: 'metalloid', x: 13, y: 2, weight: 10.81, desc: 'ใช้ในการผลิตแก้วทนความร้อน และเป็นสารอาหารที่จำเป็นต่อการเจริญเติบโตของพืช' },
+  { num: 6, symbol: 'C', name: 'Carbon', category: 'nonmetal', x: 14, y: 2, weight: 12.01, desc: 'รากฐานของสิ่งมีชีวิตทุกชนิด พบได้ตั้งแต่ในรูปของเพชรไปจนถึงโครงสร้างดีเอ็นเอ' },
+  { num: 7, symbol: 'N', name: 'Nitrogen', category: 'nonmetal', x: 15, y: 2, weight: 14.01, desc: 'องค์ประกอบหลักของอากาศโลก (78%) และมีความสำคัญอย่างยิ่งในการผลิตปุ๋ย' },
+  { num: 8, symbol: 'O', name: 'Oxygen', category: 'nonmetal', x: 16, y: 2, weight: 16.00, desc: 'แก๊สที่เน้นการทำปฏิกิริยา จำเป็นต่อการหายใจของสิ่งมีชีวิตและการเผาไหม้' },
+  { num: 9, symbol: 'F', name: 'Fluorine', category: 'nonmetal', x: 17, y: 2, weight: 19.00, desc: 'ธาตุที่มีค่าอิเล็กโตรเนกาติวิตีสูงสุด พบในฟลูออไรด์ยาสีฟันและสารทำความเย็น' },
+  { num: 10, symbol: 'Ne', name: 'Neon', category: 'noble-gas', x: 18, y: 2, weight: 20.18, desc: 'แก๊สเฉื่อยที่มีชื่อเสียงจากการให้แสงสีส้มแดงสดใสในป้ายไฟนีออน' },
   
   // Row 3
-  { num: 11, symbol: 'Na', name: 'Sodium', category: 'alkali', x: 1, y: 3, weight: 22.99, desc: 'A highly reactive metal that explodes in water; found in table salt.' },
-  { num: 12, symbol: 'Mg', name: 'Magnesium', category: 'alkaline-earth', x: 2, y: 3, weight: 24.31, desc: 'A lightweight metal essential for photosynthesis and many body functions.' },
-  { num: 13, symbol: 'Al', name: 'Aluminum', category: 'post-transition', x: 13, y: 3, weight: 26.98, desc: 'The most abundant metal in Earth\'s crust, used in cans and aircraft.' },
-  { num: 14, symbol: 'Si', name: 'Silicon', category: 'metalloid', x: 14, y: 3, weight: 28.09, desc: 'The foundation of the digital age, found in chips and glass.' },
-  { num: 15, symbol: 'P', name: 'Phosphorus', category: 'nonmetal', x: 15, y: 3, weight: 30.97, desc: 'Required for DNA and ATP; often found in matches and fertilizers.' },
-  { num: 16, symbol: 'S', name: 'Sulfur', category: 'nonmetal', x: 16, y: 3, weight: 32.06, desc: 'A yellow element known for its smell in volcanoes and gunpowder.' },
-  { num: 17, symbol: 'Cl', name: 'Chlorine', category: 'nonmetal', x: 17, y: 3, weight: 35.45, desc: 'A toxic greenish gas used for pool cleaning and salt production.' },
-  { num: 18, symbol: 'Ar', name: 'Argon', category: 'noble-gas', x: 18, y: 3, weight: 39.95, desc: 'The third most abundant gas in Earth\'s atmosphere, used in lightbulbs.' },
+  { num: 11, symbol: 'Na', name: 'Sodium', category: 'alkali', x: 1, y: 3, weight: 22.99, desc: 'โลหะที่ว่องไวต่อปฏิกิริยาสูงมากจนระเบิดได้ในน้ำ เป็นส่วนประกอบหลักของเกลือแกง' },
+  { num: 12, symbol: 'Mg', name: 'Magnesium', category: 'alkaline-earth', x: 2, y: 3, weight: 24.31, desc: 'โลหะน้ำหนักเบาที่เป็นศูนย์กลางของคลอโรฟิลล์ในพืชและจำเป็นต่อร่างกาย' },
+  { num: 13, symbol: 'Al', name: 'Aluminum', category: 'post-transition', x: 13, y: 3, weight: 26.98, desc: 'โลหะที่มีมากที่สุดในเปลือกโลก มีน้ำหนักเบา ไม่เป็นสนิม ใช้ในอุตสาหกรรมการบิน' },
+  { num: 14, symbol: 'Si', name: 'Silicon', category: 'metalloid', x: 14, y: 3, weight: 28.09, desc: 'หัวใจสำคัญของยุคดิจิทัล ใช้ทำชิปคอมพิวเตอร์และเป็นส่วนประกอบของแก้ว' },
+  { num: 15, symbol: 'P', name: 'Phosphorus', category: 'nonmetal', x: 15, y: 3, weight: 30.97, desc: 'ธาตุที่จำเป็นต่อกระบวนการให้พลังงานในเซลล์ (ATP) และโครงสร้างดีเอ็นเอ' },
+  { num: 16, symbol: 'S', name: 'Sulfur', category: 'nonmetal', x: 16, y: 3, weight: 32.06, desc: 'ธาตุสีเหลืองที่มีความสำคัญในอุตสาหกรรมดินปืนและการผลิตกรดกำมะถัน' },
+  { num: 17, symbol: 'Cl', name: 'Chlorine', category: 'nonmetal', x: 17, y: 3, weight: 35.45, desc: 'แก๊สพิษที่ใช้ในการฆ่าเชื้อโรคในน้ำและถนอมอาหารในรูปของเกลือ' },
+  { num: 18, symbol: 'Ar', name: 'Argon', category: 'noble-gas', x: 18, y: 3, weight: 39.95, desc: 'แก๊สเฉื่อยที่มีมากเป็นอันดับสามในบรรยากาศ ใช้บรรจุในหลอดไฟเพื่อกันการเผาไหม้' },
 
   // Add more as needed... I'll stop at row 3 for now but provide placeholders or more if I can.
   // Row 4

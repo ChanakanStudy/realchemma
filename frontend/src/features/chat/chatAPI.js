@@ -1,6 +1,6 @@
 export async function callGeminiAPI(prompt, history = []) {
     try {
-        const response = await fetch("/api/npc-chat", {
+        const response = await fetch("/api/npc/npc-chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 

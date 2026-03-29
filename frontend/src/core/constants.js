@@ -21,6 +21,7 @@ export const EVENTS = {
     UI_INTERACTION: 'ui:interaction',
     OPEN_NPC_POPUP: 'OPEN_NPC_POPUP',
     CLOSE_NPC_POPUP: 'CLOSE_NPC_POPUP',
+    TRIGGER_CHAT_WITH_PROMPT: 'chat:trigger-with-prompt'
 };
 
 export const MAX_PLAYER_HP = 300;

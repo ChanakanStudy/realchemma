@@ -9,6 +9,7 @@ export const GameProvider = ({ children }) => {
     const [playerHP, setPlayerHP] = useState(MAX_PLAYER_HP);
     const [chatOpen, setChatOpen] = useState(false);
     const [npcDialogue, setNpcDialogue] = useState(null);
+    const [showDashboard, setShowDashboard] = useState(false);
 
     useEffect(() => {
         const unsubs = [
@@ -46,8 +47,9 @@ export const GameProvider = ({ children }) => {
     useEffect(() => {
         window.gameState = gameState;
         window.inChat = chatOpen;
-        console.log('STATE:', gameState);
-    }, [gameState, chatOpen]);
+        window.isDashboardOpen = showDashboard;
+        console.log('STATE:', gameState, 'Chat:', chatOpen, 'Dashboard:', showDashboard);
+    }, [gameState, chatOpen, showDashboard]);
 
     const value = {
         gameState,
@@ -63,7 +65,9 @@ export const GameProvider = ({ children }) => {
             eventBus.emit(isOpen ? EVENTS.OPEN_CHAT : EVENTS.CLOSE_CHAT);
         },
         npcDialogue,
-        setNpcDialogue
+        setNpcDialogue,
+        showDashboard,
+        setShowDashboard
     };
 
     return (
