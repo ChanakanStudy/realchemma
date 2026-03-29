@@ -1,12 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { localAdapter } from './authAdapters/localAdapter';
+import { apiAdapter } from './authAdapters/apiAdapter';
 
-// ------------------------------------------------------------
-// To upgrade to Level 2 (JWT) or Level 3 (OAuth):
-//   1. Create a new adapter in authAdapters/ with the same interface
-//   2. Replace the import below — that's the ONLY change needed
-// ------------------------------------------------------------
-const adapter = localAdapter;
+const adapter = apiAdapter;
 
 const AuthContext = createContext(null);
 
@@ -23,8 +18,13 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (name) => {
-    const player = await adapter.login(name);
+  const login = async (username, password) => {
+    const player = await adapter.login(username, password);
+    setCurrentPlayer(player);
+  };
+  
+  const register = async (username, email, password) => {
+    const player = await adapter.register(username, email, password);
     setCurrentPlayer(player);
   };
 
@@ -34,9 +34,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = {
-    currentPlayer,  // { name, loginAt } | null
+    currentPlayer,  // { id, username, email } | null
     isLoading,      // true while checking session on startup
-    login,          // (name: string) => Promise<void>
+    login,          // (email, password) => Promise<void>
+    register,       // (username, email, password) => Promise<void>
     logout,         // () => Promise<void>
   };
 
