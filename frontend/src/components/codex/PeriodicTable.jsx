@@ -64,32 +64,53 @@ export default function PeriodicTable({ discoveredElements = [], onClose, embedd
         </div>
       </div>
 
-      <div className="element-detail">
+      <div className="element-detail custom-scrollbar">
         {selected ? (
           <div className="detail-card animate-slide-in">
             <div className="detail-header" style={{ borderLeft: `8px solid ${ELEMENT_CATEGORIES[selected.category].color}` }}>
-              <div className="detail-symbol-large">{selected.symbol}</div>
-              <div style={{ flexGrow: 1 }}>
+              <div className="detail-symbol-wrapper">
+                <div className="detail-symbol-large" style={{ color: ELEMENT_CATEGORIES[selected.category].color }}>{selected.symbol}</div>
+                <div className="detail-num-large">{selected.num}</div>
+              </div>
+              <div className="detail-info-main">
                 <h2 className="detail-name">{selected.name}</h2>
-                <p className="detail-category">{ELEMENT_CATEGORIES[selected.category].name} | #{selected.num}</p>
+                <p className="detail-category-label" style={{ color: ELEMENT_CATEGORIES[selected.category].color }}>
+                  {ELEMENT_CATEGORIES[selected.category].name}
+                </p>
               </div>
             </div>
+            
             <div className="detail-body">
-              <div className="detail-stat">
-                <span>Atomic Weight:</span>
-                <strong>{selected.weight} u</strong>
+              <div className="detail-stats-grid">
+                <div className="detail-stat-box">
+                  <span className="stat-label">Atomic Weight</span>
+                  <span className="stat-value">{selected.weight} <small>u</small></span>
+                </div>
+                <div className="detail-stat-box">
+                  <span className="stat-label">State (STP)</span>
+                  <span className="stat-value">{selected.num <= 2 || selected.num === 10 || selected.num === 18 ? 'Gas' : selected.symbol === 'Hg' || selected.symbol === 'Br' ? 'Liquid' : 'Solid'}</span>
+                </div>
               </div>
-              <p className="detail-desc">{selected.desc}</p>
-              <div className="detail-fact">
-                <span className="fact-icon">💡</span>
-                <span>{getChemistryFact(selected.symbol)}</span>
+
+              <div className="detail-section">
+                <h3 className="section-title-small">PROPERTIES & LORE</h3>
+                <p className="detail-desc">{selected.desc}</p>
+              </div>
+
+              <div className="detail-fact-box">
+                <div className="fact-header">
+                  <span className="fact-icon">💡</span>
+                  <span className="fact-title">ALCHEMIST NOTES</span>
+                </div>
+                <p className="fact-text">{getChemistryFact(selected.symbol)}</p>
               </div>
             </div>
           </div>
         ) : (
           <div className="detail-placeholder">
-            <p>เลือกธาตุที่ค้นพบแล้วเพื่อดูข้อมูลรายละเอียด...</p>
-            <div className="pulse-icon">🧪</div>
+            <div className="placeholder-icon">⚗️</div>
+            <h3>SELECT AN ELEMENT</h3>
+            <p>เลือกธาตุที่ค้นพบแล้วเพื่อดูบันทึกการทดลองและคุณสมบัติทางเคมี...</p>
           </div>
         )}
       </div>

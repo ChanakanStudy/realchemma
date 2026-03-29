@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGameContext } from '../../core/GameContext';
 import { callGeminiAPI } from './chatAPI';
 import { formatFormula } from '../../core/utils';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 export default function ChatScreen() {
     const { chatOpen, setChatOpen } = useGameContext();
@@ -26,27 +28,50 @@ export default function ChatScreen() {
         if (chatOpen && chatInputRef.current) {
             setTimeout(() => chatInputRef.current.focus(), 100);
         }
-    }, [chatOpen]);
 
-    const sendMessage = async () => {
-        const text = chatInput.trim();
+        // Listener for triggered prompts (e.g. from Inventory)
+        const handleTriggerPrompt = (prompt) => {
+            setChatOpen(true);
+            // We need to wait for state update or use a ref-like approach
+            // But here we can just call sendMessage with the prompt directly
+            if (prompt) {
+                setTimeout(() => {
+                    executeSendMessage(prompt);
+                }, 300);
+            }
+        };
+
+        const unsub = eventBus.on(EVENTS.TRIGGER_CHAT_WITH_PROMPT, handleTriggerPrompt);
+        return () => unsub();
+    }, [chatOpen, setChatOpen]);
+
+    const executeSendMessage = async (text) => {
         if (!text || chatLoading) return;
 
-        setChatMessages(prev => [...prev, { type: 'user', text }]);
-        setChatInput('');
-        setChatLoading(true);
+        try {
+            setChatMessages(prev => [...prev, { type: 'user', text }]);
+            setChatInput('');
+            setChatLoading(true);
 
-        const historyPayload = chatMessages.map(msg => ({
-            role: msg.type === 'user' ? 'user' : 'assistant',
-            content: msg.text
-        }));
+            const historyPayload = chatMessages.map(msg => ({
+                role: msg.type === 'user' ? 'user' : 'assistant',
+                content: msg.text
+            }));
 
-        const response = await callGeminiAPI(text, historyPayload);
-
-        setChatMessages(prev => [...prev, { type: 'oracle', text: response }]);
-        setChatLoading(false);
-        if (chatInputRef.current) chatInputRef.current.focus();
+            const response = await callGeminiAPI(text, historyPayload);
+            setChatMessages(prev => [...prev, { type: 'oracle', text: response }]);
+        } catch (error) {
+            console.error("Chat Error:", error);
+            setChatMessages(prev => [...prev, { 
+                type: 'oracle', 
+                text: "💥 พลังงานผันผวน... ข้าไม่สามารถตอบได้ในขณะนี้" 
+            }]);
+        } finally {
+            setChatLoading(false);
+        }
     };
+
+    const sendMessage = () => executeSendMessage(chatInput.trim());
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') sendMessage();
@@ -55,7 +80,8 @@ export default function ChatScreen() {
     if (!chatOpen) return null;
 
     return (
-        <div id="chatUI" className="chat-container flex">
+        <div className="chat-modal-overlay">
+            <div id="chatUI" className="chat-container flex">
             <div className="chat-header">
                 🧪 CHEMMA Lab Assistant
                 <button className="close-chat" onClick={() => setChatOpen(false)}>×</button>
@@ -99,6 +125,7 @@ export default function ChatScreen() {
                 >
                     🚀
                 </button>
+            </div>
             </div>
         </div>
     );

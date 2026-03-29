@@ -14,10 +14,8 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     create() {
+        console.time('[CHEMMA] Scene Create');
         // CRITICAL: Generate all textures FIRST before any sprites reference them
-        // This MUST be in create(), NOT preload() — Phaser's loader can clear
-        // canvas textures created during preload when the load phase completes,
-        // causing intermittent "invisible sprite" bugs.
         this.generateAllTextures();
 
         window.pScene = this;
@@ -117,7 +115,12 @@ export default class WorldScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
         this.cameras.main.setZoom(1.0);
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys('W,A,S,D,F');
+        this.keys = this.input.keyboard.addKeys({
+            W: Phaser.Input.Keyboard.KeyCodes.W,
+            A: Phaser.Input.Keyboard.KeyCodes.A,
+            S: Phaser.Input.Keyboard.KeyCodes.S,
+            D: Phaser.Input.Keyboard.KeyCodes.D
+        });
 
         // Animation definitions — higher frame rate for smoother walking
         this.anims.create({ key: 'walk-down',  frames: [{ key: 'player_d2' }, { key: 'player_d1' }, { key: 'player_d3' }, { key: 'player_d1' }], frameRate: 8, repeat: -1 });
@@ -129,7 +132,16 @@ export default class WorldScene extends Phaser.Scene {
         this.anims.create({ key: 'idle-left',  frames: [{ key: 'player_l1' }], frameRate: 1 });
         this.anims.create({ key: 'idle-right', frames: [{ key: 'player_r1' }], frameRate: 1 });
         
-        this.input.keyboard.removeCapture('W,A,S,D,F,UP,DOWN,LEFT,RIGHT,SPACE');
+        // DISABLE PHASER KEY CAPTURE for UI-controlled keys
+        this.input.keyboard.removeCapture(Phaser.Input.Keyboard.KeyCodes.B);
+        this.input.keyboard.removeCapture(Phaser.Input.Keyboard.KeyCodes.F);
+        this.input.keyboard.removeCapture(Phaser.Input.Keyboard.KeyCodes.R);
+        this.input.keyboard.removeCapture(Phaser.Input.Keyboard.KeyCodes.I);
+        this.input.keyboard.removeCapture(Phaser.Input.Keyboard.KeyCodes.M);
+        this.input.keyboard.removeCapture(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        
+        // Ensure events bubble up to the window (App.jsx)
+        this.input.keyboard.stopPropagation = false;
 
         this.fPrompt = this.add.text(0, 0, 'กด [F] เพื่อโต้ตอบ', {
             fontSize: '14px', fill: '#FFD700',
@@ -137,6 +149,22 @@ export default class WorldScene extends Phaser.Scene {
             fontFamily: 'VT323'
         }).setOrigin(0.5).setVisible(false).setDepth(100);
 
+        // Listen for interaction event from React
+        this.unsubscribeInteraction = eventBus.on(EVENTS.UI_INTERACTION, () => {
+            if (this.interactionTarget) {
+                this.handleInteraction(this.interactionTarget);
+            }
+        });
+
+        // Clean up on shut down
+        this.events.on('shutdown', () => {
+           if (this.unsubscribeInteraction) this.unsubscribeInteraction();
+        });
+
+        // DISABLE PHASER KEY CAPTURE for UI-controlled keys
+        this.input.keyboard.removeCapture('B,F,R,I,M');
+
+        console.timeEnd('[CHEMMA] Scene Create');
         console.log('[CHEMMA] Scene created — player at', this.player.x, this.player.y);
     }
 
@@ -145,53 +173,59 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (window.inChat || window.gameState === 'BATTLE' || this.player.isTalking) {
-            this.player.setVelocity(0, 0);
-            return;
-        }
+        const isPaused = window.inChat || 
+                         window.gameState === 'BATTLE' || 
+                         window.gameState === 'DIALOGUE' || 
+                         window.isDashboardOpen || 
+                         this.player.isTalking;
 
-        const speed = 180;
-        let vx = 0;
-        let vy = 0;
-        let moving = false;
+        if (!isPaused) {
+            const speed = 180;
+            let vx = 0;
+            let vy = 0;
+            let moving = false;
 
-        // Gather input — allows diagonal movement!
-        const left  = this.keys.A.isDown || this.cursors.left.isDown;
-        const right = this.keys.D.isDown || this.cursors.right.isDown;
-        const up    = this.keys.W.isDown || this.cursors.up.isDown;
-        const down  = this.keys.S.isDown || this.cursors.down.isDown;
+            // Gather input — allows diagonal movement!
+            const left  = this.keys.A.isDown || this.cursors.left.isDown;
+            const right = this.keys.D.isDown || this.cursors.right.isDown;
+            const up    = this.keys.W.isDown || this.cursors.up.isDown;
+            const down  = this.keys.S.isDown || this.cursors.down.isDown;
 
-        if (left)  vx -= 1;
-        if (right) vx += 1;
-        if (up)    vy -= 1;
-        if (down)  vy += 1;
+            if (left)  vx -= 1;
+            if (right) vx += 1;
+            if (up)    vy -= 1;
+            if (down)  vy += 1;
 
-        // Normalize diagonal speed (prevents faster speed at 45°)
-        if (vx !== 0 && vy !== 0) {
-            const diag = speed * 0.707; // ~1/√2
-            vx *= diag;
-            vy *= diag;
-        } else {
-            vx *= speed;
-            vy *= speed;
-        }
-
-        this.player.setVelocity(vx, vy);
-
-        // Determine facing direction & play animation
-        if (vx !== 0 || vy !== 0) {
-            moving = true;
-            // Pick dominant direction for animation
-            if (Math.abs(vx) >= Math.abs(vy)) {
-                this.facing = vx < 0 ? 'left' : 'right';
+            // Normalize diagonal speed (prevents faster speed at 45°)
+            if (vx !== 0 && vy !== 0) {
+                const diag = speed * 0.707; // ~1/√2
+                vx *= diag;
+                vy *= diag;
             } else {
-                this.facing = vy < 0 ? 'up' : 'down';
+                vx *= speed;
+                vy *= speed;
             }
-            this.player.anims.play(`walk-${this.facing}`, true);
+
+            this.player.setVelocity(vx, vy);
+
+            // Determine facing direction & play animation
+            if (vx !== 0 || vy !== 0) {
+                moving = true;
+                // Pick dominant direction for animation
+                if (Math.abs(vx) >= Math.abs(vy)) {
+                    this.facing = vx < 0 ? 'left' : 'right';
+                } else {
+                    this.facing = vy < 0 ? 'up' : 'down';
+                }
+                this.player.anims.play(`walk-${this.facing}`, true);
+            } else {
+                this.player.anims.play(`idle-${this.facing}`, true);
+            }
+            this.player.facing = this.facing; // Store facing direction for interaction
         } else {
+            this.player.setVelocity(0, 0);
             this.player.anims.play(`idle-${this.facing}`, true);
         }
-        this.player.facing = this.facing; // Store facing direction for interaction
 
         // Dynamic depth sorting — walk behind/in front of trees
         this.player.setDepth(this.player.y);
@@ -202,7 +236,7 @@ export default class WorldScene extends Phaser.Scene {
 
         // Find nearest NPC
         let nearestNpc = null;
-        let minDistance = 90; // Interaction range
+        let minDistance = 120; // Increased interaction range (approx 2.5 tiles)
 
         this.npcs.getChildren().forEach(npc => {
             const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y);
@@ -217,30 +251,32 @@ export default class WorldScene extends Phaser.Scene {
             this.fPrompt.setPosition(nearestNpc.x, nearestNpc.y - 50).setVisible(true);
         }
 
-        // Handle interaction input
-        if (Phaser.Input.Keyboard.JustDown(this.keys.F) && this.interactionTarget) {
-            if (this.interactionTarget === 'oracle') {
-                eventBus.emit(EVENTS.OPEN_CHAT);      
-            } else if (this.interactionTarget === 'battle_master') {
-                eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+    }
+
+    handleInteraction(target) {
+        if (target === 'oracle') {
+            eventBus.emit(EVENTS.OPEN_CHAT);      
+        } else if (target === 'battle_master') {
+            eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
                 npcId: 'battle_master',
                 name: 'Battle Master',
                 message: 'พร้อมจะพิสูจน์ฝีมือแล้วหรือยัง?',
                 choices: [
                     { id: 'fight', label: 'สู้' },
                     { id: 'leave', label: 'ยังไม่สู้' }
-                    ]
-                });
-            }
+                ]
+            });
         }
     }
 
     generateAllTextures() {
+        console.time('[CHEMMA] Texture Gen');
         const keys = Object.keys(ART_DATA);
         console.log(`[CHEMMA] Generating ${keys.length} textures...`);
         for (const key of keys) {
             this.generateTexture(key, ART_DATA[key]);
         }
+        console.timeEnd('[CHEMMA] Texture Gen');
         console.log(`[CHEMMA] All ${keys.length} textures generated successfully.`);
     }
 

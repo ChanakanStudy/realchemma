@@ -10,38 +10,72 @@ import WorldScreen from './features/world/WorldScreen';
 import BattleScreen from './features/battle/BattleScreen';
 import ChatScreen from './features/chat/ChatScreen';
 import DialogueScreen from './features/dialogue/DialogueScreen';
+import { eventBus } from './core/EventBus';
+import { EVENTS } from './core/constants';
 
 // Dashboard Imports
 import InventoryUI from './components/inventory/InventoryUI';
 import { loadGameState } from './core/userState';
 
 function GameContent() {
-  const { gameState } = useGameContext();
+  const { gameState, showDashboard, setShowDashboard, chatOpen, setChatOpen } = useGameContext();
   const { currentPlayer, isLoading } = useAuth();
   const gameInitialized = useRef(false);
   
-  // Dashboard State
-  const [showDashboard, setShowDashboard] = useState(false);
+  // Local Dashboard state moved to GameContext
   const [activeTab, setActiveTab] = useState('backpack');
   const [userData, setUserData] = useState(loadGameState());
 
   // Toggle Dashboard with 'B' key
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key.toLowerCase() === 'b') {
-        if (showDashboard) {
-          setShowDashboard(false);
-        } else {
-          setUserData(loadGameState()); // Refresh data when opening
-          setShowDashboard(true);
-        }
+      // Don't trigger shortcuts if typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      const key = e.key.toLowerCase();
+      console.log(`[CHEMMA] Key pressed: ${key} (State: ${gameState}, Dashboard: ${showDashboard}, Chat: ${chatOpen})`);
+      
+      // If we are in an overlay state, allow ESC to close it
+      if (key === 'escape' || e.code === 'Escape') {
+          if (showDashboard) {
+            console.log('[CHEMMA] Closing Dashboard via ESC');
+            setShowDashboard(false);
+          }
+          if (chatOpen) {
+            console.log('[CHEMMA] Closing Chat via ESC');
+            setChatOpen(false);
+          }
+          return;
       }
-      if (e.key === 'Escape') setShowDashboard(false);
+
+      // Priority: Handle 'B' (Inventory) - Always toggle unless in a blocking state like typing
+      if (key === 'b' || e.code === 'KeyB') {
+        const nextState = !showDashboard;
+        console.log(`[CHEMMA] Toggling Dashboard to: ${nextState}`);
+        setShowDashboard(nextState);
+        if (nextState) {
+          setUserData(loadGameState());
+        }
+        return;
+      }
+
+      // Handle 'F' (Interaction) - Blocked if Dashboard is open
+      if (key === 'f' || e.code === 'KeyF') {
+        if (showDashboard) {
+           console.log('[CHEMMA] "F" blocked because Dashboard is open');
+           return;
+        }
+        // If chat is already open, maybe we don't want to re-trigger? 
+        // But for now, App.jsx handles the 'F' to emit interaction but WorldScene handles the response
+        console.log('[CHEMMA] Emitting UI_INTERACTION');
+        eventBus.emit(EVENTS.UI_INTERACTION);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showDashboard]);
+  }, [showDashboard, gameState, chatOpen, setShowDashboard, setChatOpen]);
 
   // Initialize Phaser once game state becomes GAME
   useEffect(() => {
@@ -63,7 +97,7 @@ function GameContent() {
 
       {gameState === GAME_STATES.MENU && <MenuScreen />}
                                         
-      {gameState === GAME_STATES.GAME && <WorldScreen />}
+      {(gameState === GAME_STATES.GAME || gameState === GAME_STATES.DIALOGUE) && <WorldScreen />}
       
       <ChatScreen />
 

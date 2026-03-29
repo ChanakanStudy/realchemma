@@ -46,11 +46,11 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`🎮 CHEMMA Game Server running at http://localhost:${PORT}/frontend/`);
-  console.log(`🧪 Backend running at http://localhost:8001/`);
+  console.log(`🧪 Backend running at http://localhost:8000/`);
   
   // Start the Python API backend automatically from node
   const backendPath = path.join(__dirname, 'backend');
-  const pythonProcess = spawn('python3', ['-m', 'uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8001', '--reload'], {
+  const pythonProcess = spawn('python3', ['-m', 'uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000', '--reload'], {
     cwd: backendPath,
     stdio: 'inherit'
   });

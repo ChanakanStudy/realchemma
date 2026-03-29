@@ -118,7 +118,7 @@ Create a flexible AI NPC that:
 - Keeps the conversation within chemistry
 - Helps the player learn through interaction"""
 
-async def get_npc_response(user_message: str, history: list = None, model: str = "google/gemini-2.5-flash") -> str:
+async def get_npc_response(user_message: str, history: list = None, model: str = "google/gemini-2.0-flash-001") -> str:
     """
     Sends a message to the OpenRouter API and retrieves the NPC's response.
     

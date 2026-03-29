@@ -2,30 +2,30 @@
 // 🧪 ALCHEMY DATABASE & LOGIC
 // ==========================================
 export const ELEMENTS = [
-  { symbol: 'H', name: 'Hydrogen', color: '#3b82f6', rune: '💧' },
-  { symbol: 'O', name: 'Oxygen', color: '#10b981', rune: '🌪️' },
-  { symbol: 'Na', name: 'Sodium', color: '#eab308', rune: '⚡' },
-  { symbol: 'Cl', name: 'Chlorine', color: '#84cc16', rune: '☣️' },
-  { symbol: 'C', name: 'Carbon', color: '#64748b', rune: '🌑' },
-  { symbol: 'N', name: 'Nitrogen', color: '#8b5cf6', rune: '💨' },
-  { symbol: 'S', name: 'Sulfur', color: '#f59e0b', rune: '🌋' },
-  { symbol: 'K', name: 'Potassium', color: '#ec4899', rune: '💥' },
-  { symbol: 'Fe', name: 'Iron', color: '#71717a', rune: '🛡️' },
-  { symbol: 'Ca', name: 'Calcium', color: '#d97706', rune: '🦴' }
+  { symbol: 'H', name: 'Hydrogen', color: '#3b82f6', rune: '💧', desc: 'ธาตุที่เบาที่สุดในจักรวาล เป็นเชื้อเพลิงของดวงดาวและจุดเริ่มต้นของสสารทั้งหมด' },
+  { symbol: 'O', name: 'Oxygen', color: '#10b981', rune: '🌪️', desc: 'แก๊สที่ว่องไวต่อการเกิดปฏิกิริยา จำเป็นอย่างยิ่งต่อการหายใจและการเผาไหม้' },
+  { symbol: 'Na', name: 'Sodium', color: '#eab308', rune: '⚡', desc: 'โลหะที่ว่องไวต่อปฏิกิริยาสูงมาก สามารถทำปฏิกิริยารุนแรงจนระเบิดได้เมื่อสัมผัสกับน้ำ' },
+  { symbol: 'Cl', name: 'Chlorine', color: '#84cc16', rune: '☣️', desc: 'แก๊สพิษสีเขียวอมเหลือง มีกลิ่นฉุน ใช้ในการฆ่าเชื้อโรคและผลิตเกลือแกง' },
+  { symbol: 'C', name: 'Carbon', color: '#64748b', rune: '🌑', desc: 'ธาตุพื้นฐานของสิ่งมีชีวิต พบได้ทั้งในรูปของอัญมณีล้ำค่าอย่างเพชร และโครงสร้างของดีเอ็นเอ' },
+  { symbol: 'N', name: 'Nitrogen', color: '#8b5cf6', rune: '💨', desc: 'ธาตุที่มีมากที่สุดในชั้นบรรยากาศโลก เป็นองค์ประกอบสำคัญของโปรตีนและปุ๋ย' },
+  { symbol: 'S', name: 'Sulfur', color: '#f59e0b', rune: '🌋', desc: 'ธาตุสีเหลืองที่มีกลิ่นเป็นเอกลักษณ์ พบได้ในบริเวณภูเขาไฟ ใช้ในการทำดินปืนและยารักษาโรค' },
+  { symbol: 'K', name: 'Potassium', color: '#ec4899', rune: '💥', desc: 'โลหะเนื้ออ่อนสีเงินที่ว่องไวต่อปฏิกิริยามาก จำเป็นต่อการทำงานของระบบประสาทและกล้ามเนื้อ' },
+  { symbol: 'Fe', name: 'Iron', color: '#71717a', rune: '🛡️', desc: 'โลหะที่เป็นรากฐานของอารยธรรมมนุษย์ เป็นแกนกลางของโลกและอยู่ในเม็ดเลือดแดงของเรา' },
+  { symbol: 'Ca', name: 'Calcium', color: '#d97706', rune: '🦴', desc: 'ธาตุสำคัญที่ทำให้กระดูกและฟันแข็งแรง และเป็นส่วนประกอบหลักของเปลือกหอยและหินปูน' }
 ];
 
 export const RECIPES = [
-  { id: 'H2O', name: 'Aqua Vitae (H2O)', formula: { H: 2, O: 1 }, damage: 30, status: 'Wet', color: '#60a5fa' },
-  { id: 'HCl', name: 'Acid Flask (HCl)', formula: { H: 1, Cl: 1 }, damage: 80, status: 'Corroded', color: '#4ade80' },
-  { id: 'NaCl', name: 'Crystal Salt (NaCl)', formula: { Na: 1, Cl: 1 }, damage: 50, status: 'Crystalized', color: '#fef08a' },
-  { id: 'NaOH', name: 'Caustic Brew (NaOH)', formula: { Na: 1, O: 1, H: 1 }, damage: 100, status: 'Burn', color: '#c084fc' },
-  { id: 'CO2', name: 'Choking Smog (CO2)', formula: { C: 1, O: 2 }, damage: 20, status: 'Suffocated', color: '#94a3b8' },
-  { id: 'NH3', name: 'Ammonia Gas (NH3)', formula: { N: 1, H: 3 }, damage: 40, status: 'Shock', color: '#c4b5fd' }, // แอมโมเนียทำให้มึนงง
-  { id: 'H2S', name: 'Rotten Egg Gas (H2S)', formula: { H: 2, S: 1 }, damage: 90, status: 'Toxin', color: '#fcd34d' }, // แก๊สไข่เน่าเป็นพิษ
-  { id: 'Fe2O3', name: 'Rusted Iron (Fe2O3)', formula: { Fe: 2, O: 3 }, damage: 110, status: 'Crystalized', color: '#b45309' }, // สนิมเหล็ก เพิ่มน้ำหนัก/แช่แข็ง
-  { id: 'KCl', name: 'Potassium Salt (KCl)', formula: { K: 1, Cl: 1 }, damage: 60, status: 'Marked', color: '#fbcfe8' }, // สารเร่งระเบิด แปะเป้าหมาย
-  { id: 'CH4', name: 'Methane Gas (CH4)', formula: { C: 1, H: 4 }, damage: 30, status: 'Flammable', color: '#d1d5db' }, // มีเทน ไวไฟสูงมาก
-  { id: 'CaO', name: 'Quicklime (CaO)', formula: { Ca: 1, O: 1 }, damage: 85, status: 'Burn', color: '#ffedd5' }, // ปูนขาว คายความร้อนรุนแรง
+  { id: 'H2O', name: 'Aqua Vitae (H2O)', formula: { H: 2, O: 1 }, damage: 30, status: 'Wet', color: '#60a5fa', desc: 'น้ำแห่งชีวิต มีสมบัติเป็นกลาง ล้างสถานะผิดปกติทางเคมีพื้นฐานได้' },
+  { id: 'HCl', name: 'Acid Flask (HCl)', formula: { H: 1, Cl: 1 }, damage: 80, status: 'Corroded', color: '#4ade80', desc: 'กรดแก่ที่มีฤทธิ์กัดกร่อนสูง ระเหยง่ายและอันตรายต่อเนื้อเยื่อ' },
+  { id: 'NaCl', name: 'Crystal Salt (NaCl)', formula: { Na: 1, Cl: 1 }, damage: 50, status: 'Crystalized', color: '#fef08a', desc: 'เกลือแกงใสบริสุทธิ์ ใช้ในการปรุงอาหารและรักษาความสมดุลของเหลวในร่างกาย' },
+  { id: 'NaOH', name: 'Caustic Brew (NaOH)', formula: { Na: 1, O: 1, H: 1 }, damage: 100, status: 'Burn', color: '#c084fc', desc: 'โซดาไฟ มีฤทธิ์เป็นเบสแก่ กัดกร่อนรุนแรง มักใช้ในอุตสาหกรรมทำความสะอาด' },
+  { id: 'CO2', name: 'Choking Smog (CO2)', formula: { C: 1, O: 2 }, damage: 20, status: 'Suffocated', color: '#94a3b8', desc: 'แก๊สไม่มีสีที่เกิดจากการหายใจและการเผาไหม้ หากเข้มข้นสูงจะทำให้ขาดอากาศหายใจ' },
+  { id: 'NH3', name: 'Ammonia Gas (NH3)', formula: { N: 1, H: 3 }, damage: 40, status: 'Shock', color: '#c4b5fd', desc: 'แก๊สที่มีกลิ่นฉุนรุนแรง ใช้ในอุตสาหกรรมทำความเย็นและผลิตปุ๋ย' },
+  { id: 'H2S', name: 'Rotten Egg Gas (H2S)', formula: { H: 2, S: 1 }, damage: 90, status: 'Toxin', color: '#fcd34d', desc: 'แก๊สที่มีกลิ่นเหม็นเน่าเหมือนไข่เน่า มีความเป็นพิษสูงและไวไฟ' },
+  { id: 'Fe2O3', name: 'Rusted Iron (Fe2O3)', formula: { Fe: 2, O: 3 }, damage: 110, status: 'Crystalized', color: '#b45309', desc: 'รังแคของเหล็กหรือสนิม เกิดจากปฏิกิริยาระหว่างเหล็ก ออกซิเจน และความชื้น' },
+  { id: 'KCl', name: 'Potassium Salt (KCl)', formula: { K: 1, Cl: 1 }, damage: 60, status: 'Marked', color: '#fbcfe8', desc: 'เกลือโพแทสเซียม ใช้ในทางการแพทย์เพื่อเพิ่มระดับโพแทสเซียมและในปุ๋ย' },
+  { id: 'CH4', name: 'Methane Gas (CH4)', formula: { C: 1, H: 4 }, damage: 30, status: 'Flammable', color: '#d1d5db', desc: 'แก๊สชีวภาพที่ไวไฟสูงมาก เป็นส่วนประกอบหลักของแก๊สธรรมชาติ' },
+  { id: 'CaO', name: 'Quicklime (CaO)', formula: { Ca: 1, O: 1 }, damage: 85, status: 'Burn', color: '#ffedd5', desc: 'ปูนขาว เมื่อสัมผัสน้ำจะคายความร้อนรุนแรง ใช้ในการปรับสภาพดินและฆ่าเชื้อ' },
 ];
 
 export const ULTIMATES = [
