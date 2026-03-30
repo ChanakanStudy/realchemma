@@ -156,78 +156,146 @@ html {
     pointer-events: none;
 }
 
-.player-status {
+/* --- Game HUD Top Left (Persona Card) --- */
+.hud-top-left {
     position: absolute;
     top: 20px;
     left: 20px;
     display: flex;
     align-items: center;
     gap: 15px;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 10px 20px;
-    border-radius: 50px;
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    backdrop-filter: blur(5px);
+    z-index: 10;
+    pointer-events: auto;
+    filter: drop-shadow(0 6px 15px rgba(0, 0, 0, 0.8));
 }
 
-.avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #1e3a8a;
-    border: 2px solid var(--gold-primary);
+.hud-avatar-wrapper {
+    position: relative;
+    width: 90px;
+    height: 90px;
+}
+
+.hud-avatar {
+    width: 100%;
+    height: 100%;
+    background: #0f172a;
+    border: 3px solid var(--gold-primary);
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.5rem;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
-}
-
-.bars {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    width: 200px;
-}
-
-.bar-bg {
-    width: 100%;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
+    font-size: 2.5rem;
+    box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.4);
     overflow: hidden;
 }
 
-.hp-fill {
-    width: 100%;
-    height: 100%;
-    background: var(--hp-red);
-    box-shadow: 0 0 10px var(--hp-red);
-}
-
-.mp-fill {
-    width: 80%;
-    height: 100%;
-    background: var(--mp-blue);
-    box-shadow: 0 0 10px var(--mp-blue);
-}
-
-.level-badge {
+.hud-level-badge {
     position: absolute;
     bottom: -8px;
-    right: -8px;
-    background: linear-gradient(135deg, #d4af37, #f9f1cc);
-    color: black;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #d4af37, #fde047);
+    color: #000;
+    padding: 3px 12px;
     font-size: 0.85rem;
     font-weight: 900;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    border: 2px solid #000;
+    border-radius: 4px;
+    border: 2px solid #111;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.8);
+    letter-spacing: 1px;
+    z-index: 2;
+}
+
+.hud-stats-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: #0f172a;
+    padding: 12px 50px 12px 20px;
+    border: 2px solid var(--gold-primary);
+    border-left: 4px solid var(--gold-primary);
+    border-radius: 8px;
+    height: 75px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+}
+
+.hud-player-name {
+    color: white;
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    margin-bottom: 4px;
+    line-height: 1;
+}
+
+.hud-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hud-bar-wrapper {
+    position: relative;
+    width: 250px;
+    height: 16px;
+}
+
+.hud-bar-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #000;
+    border: 1px solid #333;
+    transform: skewX(-20deg);
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,1);
+}
+
+.hud-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #b91c1c, #ef4444);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+    position: relative;
+    transition: width 0.3s ease;
+}
+
+.hud-mp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+    position: relative;
+    transition: width 0.3s ease;
+}
+
+.hud-bar-glow {
+    position: absolute;
+    top: 0; right: 0;
+    width: 20px; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    animation: bar-glow-anim 2s infinite linear;
+}
+
+@keyframes bar-glow-anim {
+    0% { transform: translateX(-100px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(250px); opacity: 0; }
+}
+
+.hud-bar-text {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-weight: 900;
+    font-family: 'jetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    line-height: 1;
+    z-index: 2;
 }
 
 .minimap-container {
@@ -306,61 +374,34 @@ html {
     width: 140px;
     height: 140px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(0, 0, 0, 0.8) 70%);
-    border: 2px solid var(--gold-primary);
+    border: 3px solid var(--gold-primary);
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2), inset 0 0 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    z-index: 10;
 }
 
-.minimap-grid {
+.minimap-inner-border {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-image:
-        linear-gradient(rgba(212, 175, 55, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(212, 175, 55, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    background-position: center;
-}
-
-.minimap-scan {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: conic-gradient(from 0deg, transparent 0%, rgba(16, 185, 129, 0.4) 10%, transparent 20%);
-    animation: radar-sweep 4s linear infinite;
-}
-
-@keyframes radar-sweep {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.minimap-player-dot {
-    width: 8px;
-    height: 8px;
-    background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 10px #fff;
-    z-index: 5;
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
 .minimap-label {
     position: absolute;
-    bottom: 10px;
+    bottom: -15px;
+    background: rgba(0,0,0,0.8);
+    padding: 2px 8px;
+    border-radius: 4px;
     font-size: 10px;
     color: var(--gold-primary);
     font-weight: 800;
     letter-spacing: 1px;
+    border: 1px solid var(--gold-primary);
     text-shadow: 0 0 5px #000;
 }
 
