@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PeriodicTable from '../codex/PeriodicTable';
 import { ELEMENTS, RECIPES } from '../../features/battle/battleLogic';
 import { formatFormula } from '../../core/utils';
 import { eventBus } from '../../core/EventBus';
 import { EVENTS } from '../../core/constants';
+import { getQuestState } from '../../api/client';
+import { useGameContext } from '../../core/GameContext';
 
 
 export default function InventoryUI({
@@ -13,6 +15,41 @@ export default function InventoryUI({
   onClose
 }) {
   const [codexTab, setCodexTab] = useState('elements');
+  const { questState, setQuestState } = useGameContext();
+  const [questLoading, setQuestLoading] = useState(false);
+  const [questError, setQuestError] = useState('');
+
+  useEffect(() => {
+    if (activeTab !== 'quests') return;
+
+    let cancelled = false;
+
+    const syncQuestState = async () => {
+      setQuestLoading(true);
+      setQuestError('');
+
+      try {
+        const latestQuestState = await getQuestState();
+        if (cancelled) return;
+
+        setQuestState(latestQuestState);
+      } catch (error) {
+        if (!cancelled) {
+          setQuestError(error.message || 'Unable to load quest data');
+        }
+      } finally {
+        if (!cancelled) {
+          setQuestLoading(false);
+        }
+      }
+    };
+
+    syncQuestState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, setQuestState]);
 
   const tabs = [
     { id: 'backpack', label: 'BACKPACK', icon: '🎒' },
@@ -78,7 +115,13 @@ export default function InventoryUI({
               ? <PeriodicTable discoveredElements={userData.discovered} embedded={true} />
               : <CompoundCodex discovered={userData.discoveredCompounds || []} />
           )}
-          {activeTab === 'quests' && <QuestsTab quests={userData.quests} />}
+          {activeTab === 'quests' && (
+            <QuestsTab
+              questState={questState}
+              isLoading={questLoading}
+              error={questError}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -202,19 +245,71 @@ function ItemCard({ item, info, isCompound = false, onCloseDashboard }) {
   );
 }
 
-function QuestsTab({ quests }) {
+function QuestsTab({ questState, isLoading, error }) {
+  const quests = questState?.quests ?? [];
+  const activeQuest = questState?.active_quest ?? null;
+  const nextQuest = questState?.available_quests?.[0] ?? null;
+  const completedCount = questState?.completed_quests?.length ?? 0;
+  const questChainComplete = questState?.quest_chain_complete ?? false;
+
   return (
     <div className="quests-list animate-fade-in">
+      {isLoading && (
+        <div className="quest-summary-card">
+          <div className="quest-summary-row">
+            <span>Loading</span>
+            <strong>Syncing quest progress from server...</strong>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="quest-summary-card quest-summary-error">
+          <div className="quest-summary-row">
+            <span>Quest sync error</span>
+            <strong>{error}</strong>
+          </div>
+        </div>
+      )}
+
+      <div className="quest-summary-card">
+        <div className="quest-summary-row">
+          <span>Active</span>
+          <strong>{activeQuest ? activeQuest.title : 'None'}</strong>
+        </div>
+        <div className="quest-summary-row">
+          <span>Next</span>
+          <strong>{nextQuest ? nextQuest.title : 'Locked'}</strong>
+        </div>
+        <div className="quest-summary-row">
+          <span>Completed</span>
+          <strong>{completedCount} / {quests.length}</strong>
+        </div>
+        <div className="quest-summary-row">
+          <span>Chain</span>
+          <strong>{questChainComplete ? 'Complete' : 'In Progress'}</strong>
+        </div>
+      </div>
+
       {quests.map(q => (
         <div key={q.id} className="quest-card">
           <div className="quest-status-icon">{q.status === 'completed' ? '✅' : '⏳'}</div>
           <div className="quest-details">
             <h3 className="quest-title">{q.title}</h3>
             <p className="quest-obj">เป้าหมาย: {q.objective}</p>
+            {q.boss_name && <p className="quest-obj">บอส: {q.boss_name}</p>}
+            {q.reward_xp ? <p className="quest-obj">รางวัล XP: {q.reward_xp}</p> : null}
             <span className={`quest-status-tag ${q.status}`}>{q.status}</span>
           </div>
         </div>
       ))}
+
+      {!isLoading && quests.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">📜</div>
+          <p>ไม่พบข้อมูลเควสจากเซิร์ฟเวอร์</p>
+        </div>
+      )}
     </div>
   );
 }

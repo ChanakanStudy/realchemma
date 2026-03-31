@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useGameContext } from '../../core/GameContext';
+import { completeQuest } from '../../api/client';
 import {
   ELEMENTS,
   RECIPES,
@@ -14,6 +16,7 @@ import {
 // 🎬 MAIN BATTLE COMPONENT
 // ==========================================
 export default function BattleScene({ onQuitBattle }) {
+  const { questState, setQuestState } = useGameContext();
   const [phase, setPhase] = useState(0); 
   const [activeBossId, setActiveBossId] = useState(null);
   
@@ -56,13 +59,53 @@ export default function BattleScene({ onQuitBattle }) {
   const [chargingItem, setChargingItem] = useState(null); 
   const [cinematicText, setCinematicText] = useState(null); 
 
+  const questIdRef = useRef(questState?.active_quest?.id ?? null);
+  const questSessionRef = useRef(Boolean(questState?.active_quest?.id));
+  const questCompletionHandledRef = useRef(false);
+
   const activeBoss = activeBossId ? BOSS_DATABASE[activeBossId] : null;
+  const questBattle = questState?.quests?.find(q => q.id === questIdRef.current) || questState?.active_quest || null;
+  const questMode = questSessionRef.current;
+
+  useEffect(() => {
+    if (!questIdRef.current && questState?.active_quest?.id) {
+      questIdRef.current = questState.active_quest.id;
+    }
+  }, [questState]);
 
   const addLog = useCallback((msg) => setLogs(prev => [msg, ...prev].slice(0, 5)), []);
-  const endGame = useCallback((isWin, reason) => { setPhase(5); addLog(reason); }, [addLog]);
+  const completeActiveQuest = useCallback(async () => {
+    const questId = questIdRef.current;
+    if (!questId || !activeBoss || questCompletionHandledRef.current) return;
+
+    questCompletionHandledRef.current = true;
+
+    try {
+      const nextQuestState = await completeQuest(questId, activeBoss.id);
+      setQuestState(nextQuestState);
+    } catch (error) {
+      console.error('[CHEMMA] Failed to complete quest:', error);
+    }
+  }, [activeBoss, setQuestState]);
+
+  const endGame = useCallback((isWin, reason) => {
+    setPhase(5);
+    addLog(reason);
+
+    if (isWin && questMode) {
+      void completeActiveQuest();
+    }
+  }, [addLog, completeActiveQuest, questMode]);
 
   const startQuest = (bossId) => {
     const target = BOSS_DATABASE[bossId];
+    if (questBattle?.id) {
+      questIdRef.current = questBattle.id;
+    }
+
+    questSessionRef.current = Boolean(questBattle?.id);
+
+    questCompletionHandledRef.current = false;
     setActiveBossId(bossId);
     setMonsterHP(target.maxHp);
     setPlayerHP(MAX_PLAYER_HP);
@@ -386,6 +429,9 @@ export default function BattleScene({ onQuitBattle }) {
     setPhase(0);
     setActiveBossId(null);
     setLogs(['AWAITING TARGET SELECTION...']);
+    questIdRef.current = null;
+    questSessionRef.current = false;
+    questCompletionHandledRef.current = false;
   };
 
   const getDynamicBg = () => {
@@ -396,11 +442,54 @@ export default function BattleScene({ onQuitBattle }) {
 
   const hasStatus = (name) => monsterStatuses.some(s => s.name === name);
   const isAnyUltimateReady = ULTIMATES.some(ult => ult.req.every(hasStatus));
+  const currentQuest = questBattle || questState?.available_quests?.[0] || null;
 
   // ==========================================
   // 🗺️ PHASE 0: QUEST BOARD MENU
   // ==========================================
   if (phase === 0) {
+    if (questMode && currentQuest) {
+      return (
+        <div className="relative w-full h-[100dvh] bg-[#020617] text-white font-hud flex flex-col items-center justify-center p-8 overflow-hidden select-none">
+          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `radial-gradient(circle at center, #1e1b4b 0%, transparent 70%)` }}></div>
+
+          <h1 className="font-epic text-4xl text-yellow-400 mb-2 drop-shadow-[4px_4px_0_#000] z-10">QUEST BRIEFING</h1>
+          <p className="text-slate-400 mb-10 tracking-widest z-10">Your trial is fixed. No monster selection here.</p>
+
+          <div className="w-full max-w-3xl z-10 bg-slate-900 border-4 border-slate-700 p-8 shadow-[8px_8px_0_#000]">
+            <h2 className="font-epic text-2xl mb-4 text-cyan-300">{currentQuest.title}</h2>
+            <p className="text-slate-300 mb-6 leading-relaxed">{currentQuest.description}</p>
+
+            <div className="grid gap-3 mb-8 text-sm">
+              <div className="flex justify-between gap-4 bg-black/50 p-3 border border-slate-700">
+                <span className="text-slate-400">Target</span>
+                <span className="text-white font-bold">{currentQuest.boss_name}</span>
+              </div>
+              <div className="flex justify-between gap-4 bg-black/50 p-3 border border-slate-700">
+                <span className="text-slate-400">Objective</span>
+                <span className="text-white font-bold text-right">{currentQuest.objective}</span>
+              </div>
+              <div className="flex justify-between gap-4 bg-black/50 p-3 border border-slate-700">
+                <span className="text-slate-400">Reward</span>
+                <span className="text-white font-bold">{currentQuest.reward_xp} XP</span>
+              </div>
+            </div>
+
+            <p className="text-emerald-300 mb-8">{currentQuest.intro_text}</p>
+
+            <div className="flex gap-4 justify-center">
+              <button onClick={() => startQuest(currentQuest.boss_id)} className="px-8 py-3 bg-indigo-900 border-2 border-indigo-500 font-epic text-xs hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all shadow-[4px_4px_0_#000]">
+                ENGAGE
+              </button>
+              <button onClick={onQuitBattle} className="px-8 py-3 bg-slate-800 border-2 border-slate-500 font-epic text-xs hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0_#000]">
+                RETURN TO ACADEMY
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="relative w-full h-[100dvh] bg-[#020617] text-white font-hud flex flex-col items-center justify-center p-8 overflow-hidden select-none">
         <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `radial-gradient(circle at center, #1e1b4b 0%, transparent 70%)` }}></div>
@@ -793,10 +882,10 @@ export default function BattleScene({ onQuitBattle }) {
                   <div className="font-epic text-3xl text-rose-500 animate-[ping_0.5s_steps(2)_infinite] drop-shadow-[4px_4px_0_#000]">ENEMY TURN!</div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <div className={`font-epic text-5xl mb-8 drop-shadow-[6px_6px_0_#000] ${playerHP > 0 ? 'text-emerald-400' : 'text-red-600'}`}>
-                      {playerHP > 0 ? 'VICTORY' : 'GAME OVER'}
+                          <div className={`font-epic text-5xl mb-8 drop-shadow-[6px_6px_0_#000] ${playerHP > 0 ? 'text-emerald-400' : 'text-red-600'}`}>
+                            {playerHP > 0 ? (questMode ? 'QUEST COMPLETE' : 'VICTORY') : 'GAME OVER'}
                     </div>
-                    <button onClick={restartToQuestMenu} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none mb-4">BACK TO BOUNTIES</button>
+                    <button onClick={questMode ? onQuitBattle : restartToQuestMenu} className="px-8 py-4 bg-white text-black font-epic text-lg hover:bg-slate-300 border-4 border-slate-600 shadow-[6px_6px_0_#000] active:translate-y-1 active:shadow-none mb-4">{questMode ? 'RETURN TO QUEST GIVER' : 'BACK TO BOUNTIES'}</button>
                   </div>
                 )}
               </div>

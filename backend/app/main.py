@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import os
 import logging
 import time
 from sqlalchemy import text
@@ -10,11 +9,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 from app.features.auth.router import router as auth_router
+from app.features.quests.router import router as quests_router
 from app.features.npc.router import router as npc_router
 
 app = FastAPI(title="CHEMMA API", version="1.0.0")
 
 from app.core.database import engine, Base, SessionLocal
+from app.features.quests.service import seed_default_quest_definitions
+from app.models.quest import QuestDefinition, UserQuestProgress
+from app.models.user import User
 
 # Function to wait for database to be ready
 def wait_for_database(max_retries=30, delay=1):
@@ -39,6 +42,8 @@ if wait_for_database():
     try:
         logger.info("🔄 Creating database tables...")
         Base.metadata.create_all(bind=engine)
+        with SessionLocal() as db:
+            seed_default_quest_definitions(db)
         logger.info("✅ Database tables created successfully")
     except Exception as e:
         logger.error(f"❌ Table creation failed: {str(e)}")
@@ -59,6 +64,7 @@ async def health_check():
     return {"status": "ok", "message": "Chemma Oracle Backend is running"}
 
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+app.include_router(quests_router, prefix="/api/quests", tags=["Quests"])
 app.include_router(npc_router, prefix="/api/npc", tags=["NPC"])
 if __name__ == "__main__":
     import uvicorn

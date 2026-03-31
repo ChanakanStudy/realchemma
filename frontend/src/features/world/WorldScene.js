@@ -269,11 +269,11 @@ export default class WorldScene extends Phaser.Scene {
         } else if (target === 'battle_master') {
             eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
                 npcId: 'battle_master',
-                name: 'Battle Master',
-                message: 'พร้อมจะพิสูจน์ฝีมือคุมเคมีวิญญาณแล้วหรือยัง?',
+                name: 'Battle Master - Quest Giver',
+                message: 'ฉันมีบททดสอบการประลอง 3 ขั้นให้เจ้าเลือกทำทีละขั้น หากพร้อมแล้วรับภารกิจแรกได้เลย',
                 choices: [
-                    { id: 'fight', label: 'เข้าสู่ลานประลอง' },
-                    { id: 'leave', label: 'ยังไม่พร้อม' }
+                    { id: 'start_quest', label: 'รับภารกิจ' },
+                    { id: 'leave', label: 'กลับ' }
                 ]
             });
         }

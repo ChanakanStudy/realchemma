@@ -117,3 +117,28 @@ export async function postNpcChat(message, history = []) {
     body: { message, history },
   });
 }
+
+export async function getQuestState() {
+  return apiRequest('/quests/state', {
+    method: 'GET',
+    token: getAccessToken(),
+  });
+}
+
+export async function acceptQuest(questId) {
+  return apiRequest(`/quests/accept/${questId}`, {
+    method: 'POST',
+    token: getAccessToken(),
+  });
+}
+
+export async function completeQuest(questId, bossId) {
+  return apiRequest('/quests/complete', {
+    method: 'POST',
+    token: getAccessToken(),
+    body: {
+      quest_id: questId,
+      boss_id: bossId,
+    },
+  });
+}
