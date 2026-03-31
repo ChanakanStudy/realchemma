@@ -5,6 +5,11 @@ build/
 .env
 __pycache__/
 *.pyc
+frontend/*.log
+frontend/tmp_assets/
+/package-lock.json
+*.tiled-session
+backend/*.log
 
 
 

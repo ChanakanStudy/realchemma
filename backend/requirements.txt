@@ -1,12 +1,10 @@
 fastapi==0.115.6
 uvicorn==0.34.0
-httpx
 python-dotenv
 python-multipart
 openai
 pydantic
 sqlalchemy
-google-auth
 python-jose[cryptography]
 argon2-cffi
 passlib
