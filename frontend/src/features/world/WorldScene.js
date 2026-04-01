@@ -98,6 +98,7 @@ export default class WorldScene extends Phaser.Scene {
                     } else if (cell === 15) { // Lab Table
                         const table = this.physics.add.sprite(x, y, 'lab_table').setDepth(y);
                         table.setImmovable(true);
+                        table.npcId = 'craft_lab';
                         table.isLabTable = true;
                         this.npcs.add(table);
                     } else if (cell === 16) { // Lab Shelf
@@ -307,6 +308,8 @@ export default class WorldScene extends Phaser.Scene {
 
         if (nearestNpc) {
             this.interactionTarget = nearestNpc.npcId;
+            const promptText = nearestNpc.npcId === 'craft_lab' ? 'กด [F] เข้าแลป' : 'กด [F] โต้ตอบ';
+            this.fPrompt.setText(promptText);
             this.fPrompt.setPosition(nearestNpc.x, nearestNpc.y - 50).setVisible(true);
         }
     }
@@ -331,6 +334,16 @@ export default class WorldScene extends Phaser.Scene {
                 message: 'หากเจ้ามั่นใจ จงเข้าสู่การประลอง ณ ลานต่อสู้',
                 choices: [
                     { id: 'fight', label: 'เข้าสู่การประลอง' },
+                    { id: 'leave', label: 'กลับ' }
+                ]
+            });
+        } else if (target === 'craft_lab') {
+            eventBus.emit(EVENTS.OPEN_CRAFT_LAB, {
+                npcId: 'craft_lab',
+                name: 'Experimental Lab Bench',
+                message: 'จงทดลองผสมสารในห้องแลปนี้ อย่ามองหาสูตรจากข้า ให้ผลลัพธ์เป็นผู้บอกเอง',
+                choices: [
+                    { id: 'open_lab', label: 'เริ่มทดลอง' },
                     { id: 'leave', label: 'กลับ' }
                 ]
             });
