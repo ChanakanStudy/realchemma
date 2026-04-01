@@ -31,7 +31,7 @@ export const RECIPES = [
 export const ULTIMATES = [
   { 
     id: 'zero', name: 'ABSOLUTE ZERO', req: ['Wet', 'Suffocated'], 
-    dmg: 1500, color: '#22d3ee', bgTheme: 'bg-cyan-950', fx: 'iceShatter', desc: 'Shatter targets frozen at atomic level.' 
+    dmg: 1000000000, color: '#22d3ee', bgTheme: 'bg-cyan-950', fx: 'iceShatter', desc: 'Shatter targets frozen at atomic level.' 
   },
   { 
     id: 'hellfire', name: 'HELLFIRE ANNIHILATION', req: ['Burn', 'Corroded'], 

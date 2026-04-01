@@ -10,6 +10,7 @@ export const GameProvider = ({ children }) => {
     const [chatOpen, setChatOpen] = useState(false);
     const [npcDialogue, setNpcDialogue] = useState(null);
     const [showDashboard, setShowDashboard] = useState(false);
+    const [questState, setQuestState] = useState(null);
 
     useEffect(() => {
         const unsubs = [
@@ -54,8 +55,9 @@ export const GameProvider = ({ children }) => {
         window.gameState = gameState;
         window.inChat = chatOpen;
         window.isDashboardOpen = showDashboard;
+        window.questState = questState;
         console.log('STATE:', gameState, 'Chat:', chatOpen, 'Dashboard:', showDashboard);
-    }, [gameState, chatOpen, showDashboard]);
+    }, [gameState, chatOpen, showDashboard, questState]);
 
     const value = {
         gameState,
@@ -73,7 +75,9 @@ export const GameProvider = ({ children }) => {
         npcDialogue,
         setNpcDialogue,
         showDashboard,
-        setShowDashboard
+        setShowDashboard,
+        questState,
+        setQuestState
     };
 
     return (

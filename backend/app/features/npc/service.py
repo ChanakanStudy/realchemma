@@ -10,12 +10,13 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if not OPENROUTER_API_KEY or OPENROUTER_API_KEY == "your_openrouter_api_key_here":
     print("Warning: OPENROUTER_API_KEY is not set or is using the default value. Please update your .env file.")
-
-# Initialize the OpenAI client pointing to the OpenRouter API
-client = AsyncOpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
+    client = None
+else:
+    # Initialize the OpenAI client pointing to the OpenRouter API
+    client = AsyncOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=OPENROUTER_API_KEY,
+    )
 
 # The core system prompt defining the NPC's behavior
 SYSTEM_PROMPT = """You are an AI NPC inside a fantasy chemistry RPG game called "CHEMMA".
@@ -129,6 +130,9 @@ async def get_npc_response(user_message: str, history: list = None, model: str =
     """
     if history is None:
         history = []
+
+    if client is None:
+        return "NPC connection error: OpenRouter API key is not configured on backend."
         
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     
