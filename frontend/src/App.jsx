@@ -26,7 +26,6 @@ import {
   acceptQuest,
   completeQuest
 } from './core/userState';
-import { loadGameState } from './core/userState';
 import { getQuestState } from './api/client';
 
 function GameContent() {
