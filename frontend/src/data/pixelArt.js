@@ -236,6 +236,23 @@ export const ART_DATA = {
         "0000KkkKKkkK0000",
         "0000KKK00KKK0000"
     ],
+    npc_assistant: [
+        "000000KKKK000000",
+        "0000KUwwwwUK0000", // White/silver hair with purple hood
+        "000KUUwwwwUUK000",
+        "000KUssssssUK000",
+        "000KUsKooKoUK000", // Glowing cyan eyes
+        "000KUsKooKoUK000",
+        "000KUssssssUK000",
+        "0000KUssssUK0000",
+        "0000KKUUUUkKK000", // Purple cloak
+        "000KUUUUUUUkK000",
+        "000KUUKyyKUkK000", // Gold belt/detail
+        "000KUUUUUUUkK000",
+        "0000KUUkkUUK0000",
+        "0000KUKkkKUK0000",
+        "0000KKK00KKK0000"
+    ],
     crystal: [
         "0000440000", "0004444000", "0044444400", "0444444440", "0044444400", "0004444000", "0000440000"
     ],

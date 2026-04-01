@@ -12,6 +12,7 @@ import WorldScreen from './features/world/WorldScreen';
 import BattleScreen from './features/battle/BattleScreen';
 import ChatScreen from './features/chat/ChatScreen';
 import DialogueScreen from './features/dialogue/DialogueScreen';
+import MinigameOverlay from './features/minigames/MinigameOverlay';
 import LabScreen from './features/lab/LabScreen';
 import { eventBus } from './core/EventBus';
 import { EVENTS } from './core/constants';
@@ -245,6 +246,8 @@ function GameContent() {
           onClose={() => setShowDashboard(false)} 
         />
       )}
+
+      <MinigameOverlay />
 
       <div id="flashScreen" className="white-flash"></div>
     </>

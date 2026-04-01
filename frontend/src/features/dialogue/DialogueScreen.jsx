@@ -1,7 +1,8 @@
 import React from 'react';
 import { useGameContext } from '../../core/GameContext';
 import { acceptQuest } from '../../api/client';
-import { GAME_STATES } from '../../core/constants';
+import { GAME_STATES, EVENTS } from '../../core/constants';
+import { eventBus } from '../../core/EventBus';
 
 export default function DialogueScreen() {
     const { npcDialogue, questState, setQuestState, setGameState, setNpcDialogue } = useGameContext();
@@ -44,6 +45,9 @@ export default function DialogueScreen() {
         } else if (choiceId === 'complete_quest' && npcDialogue.rewardData) {
             eventBus.emit(EVENTS.QUEST_COMPLETED, npcDialogue.rewardData);
             eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+        } else if (choiceId === 'play_minigame') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+            eventBus.emit(EVENTS.OPEN_MINIGAME, { id: 'menu' });
         }
     };
 
