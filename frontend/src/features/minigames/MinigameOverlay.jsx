@@ -13,10 +13,10 @@ export default function MinigameOverlay() {
 
     const games = [
         { id: 'symbol_matcher', name: 'Symbol Matcher', difficulty: 'ง่าย', desc: 'จับคู่ชื่อธาตุกับสัญลักษณ์' },
-        { id: 'atomic_sorter', name: 'Atomic Sorter', difficulty: 'ง่าย', desc: 'เรียงลำดับธาตุตามเลขอะตอม' },
-        { id: 'element_memory', name: 'Element Memory', difficulty: 'ง่าย', desc: 'เกมจับคู่แผ่นป้ายเปิดไพ่ธาตุ' },
-        { id: 'element_catcher', name: 'Element Catcher', difficulty: 'ปานกลาง', desc: 'เก็บธาตุที่ตกลงมาใส่ตะกร้า' },
-        { id: 'liquid_mixer', name: 'Liquid Mixer', difficulty: 'ปานกลาง', desc: 'เทสารลงในกระบอกตวงให้ได้ระดับ' }
+        { id: 'atomic_sorter', name: 'Atomic Sorter', difficulty: 'ยาก', desc: 'เรียงลำดับธาตุตามเลขอะตอม' },
+        { id: 'liquid_mixer', name: 'Liquid Mixer', difficulty: 'ง่าย', desc: 'เทสารลงในกระบอกตวงให้ได้ระดับ' },
+        { id: 'element_memory', name: 'Element Memory', difficulty: 'ปานกลาง', desc: 'เกมจับคู่แผ่นปยายเปิดไพ่ธาตุ' },
+        { id: 'element_catcher', name: 'Element Catcher', difficulty: 'ปานกลาง', desc: 'เก็บธาตุที่ตกลงมาใส่ตะกร้า' }
     ];
 
     const handleSelectGame = (gameId) => {
@@ -68,10 +68,10 @@ export default function MinigameOverlay() {
                             ) : minigameActive.id === 'liquid_mixer' ? (
                                 <LiquidMixer onComplete={handleGameComplete} />
                             ) : (
-                                <div style={{padding: '40px', textAlign: 'center', color: '#666'}}>
+                                <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
                                     การทดสอบนี้ยังไม่พร้อมใช้งาน...
                                     <br />
-                                    <button className="mg-btn primary" style={{marginTop: '20px'}} onClick={() => setMinigameActive({id: 'menu'})}>กลับหน้าหลัก</button>
+                                    <button className="mg-btn primary" style={{ marginTop: '20px' }} onClick={() => setMinigameActive({ id: 'menu' })}>กลับหน้าหลัก</button>
                                 </div>
                             )
                         )}

@@ -1,14 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const ELEMENT_PAIRS = [
-    { name: 'Hydrogen', symbol: 'H', color: '#4fc3f7' },
-    { name: 'Helium', symbol: 'He', color: '#ce93d8' },
-    { name: 'Carbon', symbol: 'C', color: '#a5d6a7' },
-    { name: 'Oxygen', symbol: 'O', color: '#ef9a9a' },
-    { name: 'Nitrogen', symbol: 'N', color: '#ffe082' },
-    { name: 'Sodium', symbol: 'Na', color: '#80cbc4' },
-    { name: 'Iron', symbol: 'Fe', color: '#ffcc80' },
-    { name: 'Gold', symbol: 'Au', color: '#ffd54f' },
+    { name: 'Hydrogen',   symbol: 'H',  color: '#4fc3f7' },
+    { name: 'Helium',     symbol: 'He', color: '#ce93d8' },
+    { name: 'Carbon',     symbol: 'C',  color: '#a5d6a7' },
+    { name: 'Oxygen',     symbol: 'O',  color: '#ef9a9a' },
+    { name: 'Nitrogen',   symbol: 'N',  color: '#ffe082' },
+    { name: 'Sodium',     symbol: 'Na', color: '#80cbc4' },
+    { name: 'Iron',       symbol: 'Fe', color: '#ffcc80' },
+    { name: 'Gold',       symbol: 'Au', color: '#ffd54f' },
+    { name: 'Silver',     symbol: 'Ag', color: '#e0e0e0' },
+    { name: 'Copper',     symbol: 'Cu', color: '#ff8a65' },
+    { name: 'Silicon',    symbol: 'Si', color: '#90a4ae' },
+    { name: 'Sulfur',     symbol: 'S',  color: '#fff176' },
+    { name: 'Chlorine',   symbol: 'Cl', color: '#aed581' },
+    { name: 'Mercury',    symbol: 'Hg', color: '#b0bec5' },
 ];
 
 function shuffle(arr) {

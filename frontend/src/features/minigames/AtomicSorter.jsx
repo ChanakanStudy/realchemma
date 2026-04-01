@@ -12,6 +12,7 @@ const ELEMENTS = [
     { name: 'Sodium', symbol: 'Na', number: 11, color: '#80cbc4' },
     { name: 'Iron', symbol: 'Fe', number: 26, color: '#ffcc80' },
     { name: 'Gold', symbol: 'Au', number: 79, color: '#ffd54f' },
+    { name: 'Clorine', symbol: 'Cl', number: 17, color: '#901dc6ff' },
 ];
 
 function shuffle(arr) {
@@ -102,8 +103,8 @@ export default function AtomicSorter({ onComplete }) {
             {/* Slots Area */}
             <div className="as-slots-area">
                 {items.map((item, idx) => (
-                    <div 
-                        key={`${item.number}-${idx}`} 
+                    <div
+                        key={`${item.number}-${idx}`}
                         className={`as-item-card ${draggingIdx === idx ? 'dragging' : ''}`}
                         draggable
                         onDragStart={() => setDraggingIdx(idx)}

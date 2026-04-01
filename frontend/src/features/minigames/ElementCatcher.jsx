@@ -6,7 +6,23 @@ const ELEMENTS = [
     { symbol: 'O', color: '#ef9a9a', score: 15 },
     { symbol: 'C', color: '#a5d6a7', score: 12 },
     { symbol: 'Au', color: '#ffd54f', score: 50 },
-    { symbol: '☢', color: '#ff1744', score: -30, toxic: true },
+    { symbol: 'Fe', color: '#ffa726', score: 25 },
+    { symbol: 'Ag', color: '#e0e0e0', score: 40 },
+    { symbol: 'Cu', color: '#ff7043', score: 30 },
+    { symbol: 'N', color: '#64b5f6', score: 12 },
+    { symbol: 'S', color: '#fff176', score: 18 },
+    { symbol: 'Ca', color: '#81c784', score: 22 },
+    { symbol: 'Na', color: '#4db6ac', score: 22 },
+    { symbol: 'Ne', color: '#ff8a65', score: 35 },
+    { symbol: 'Mg', color: '#b0bec5', score: 28 },
+    { symbol: 'Al', color: '#90a4ae', score: 15 },
+];
+
+const FAKE_ELEMENTS = [
+    { symbol: 'Vibranium', color: '#ff1744', score: -40, toxic: true },
+    { symbol: 'Kryptonite', color: '#00e676', score: -30, toxic: true },
+    { symbol: 'Unobtanium', color: '#d500f9', score: -50, toxic: true },
+    { symbol: 'Mithril', color: '#2979ff', score: -35, toxic: true },
 ];
 
 export default function ElementCatcher({ onComplete }) {
@@ -25,9 +41,9 @@ export default function ElementCatcher({ onComplete }) {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'a') {
-                setBasketPos(p => Math.max(0, p - 5));
+                setBasketPos(p => Math.max(0, p - 8));
             } else if (e.key === 'ArrowRight' || e.key === 'd') {
-                setBasketPos(p => Math.min(90, p + 5));
+                setBasketPos(p => Math.min(90, p + 8));
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -53,11 +69,15 @@ export default function ElementCatcher({ onComplete }) {
     // Game Loop
     const update = (time) => {
         // Spawn items
-        if (time - lastSpawnRef.current > 800) {
-            const prefab = ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)];
+        if (time - lastSpawnRef.current > 700) {
+            const isToxic = Math.random() < 0.25;
+            const prefab = isToxic 
+                ? FAKE_ELEMENTS[Math.floor(Math.random() * FAKE_ELEMENTS.length)]
+                : ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)];
+            
             const newItem = {
                 id: Date.now(),
-                x: Math.random() * 90,
+                x: Math.random() * 85,
                 y: -10,
                 ...prefab
             };
@@ -101,8 +121,9 @@ export default function ElementCatcher({ onComplete }) {
     const handleMouseMove = (e) => {
         if (!gameAreaRef.current) return;
         const rect = gameAreaRef.current.getBoundingClientRect();
+        // Center the basket (width is approx 10%) on the mouse
         const x = ((e.clientX - rect.left) / rect.width) * 100;
-        setBasketPos(Math.min(90, Math.max(0, x - 5)));
+        setBasketPos(Math.min(92, Math.max(0, x - 5))); 
     };
 
     if (win || gameOver) {
@@ -131,7 +152,7 @@ export default function ElementCatcher({ onComplete }) {
                 </div>
                 <div className="sm-title-block">
                     <div className="sm-title">ELEMENT CATCHER</div>
-                    <div className="sm-subtitle">เก็บธาตุให้ครบ 300 คะแนน | ระวังสารพิษ!</div>
+                    <div className="sm-subtitle">ใช้เมาส์หรือปุ่ม A/D ในการเคลื่อนที่</div>
                 </div>
                 <div className="sm-stat">
                     <span className="sm-stat-label">TIME</span>
@@ -149,7 +170,12 @@ export default function ElementCatcher({ onComplete }) {
                     <div 
                         key={item.id} 
                         className={`ec-item ${item.toxic ? 'toxic' : ''}`}
-                        style={{ left: `${item.x}%`, top: `${item.y}%`, color: item.color }}
+                        style={{ 
+                            left: `${item.x}%`, 
+                            top: `${item.y}%`, 
+                            color: item.color,
+                            fontSize: item.toxic ? '0.75rem' : '1.4rem'
+                        }}
                     >
                         {item.symbol}
                     </div>
@@ -176,7 +202,7 @@ export default function ElementCatcher({ onComplete }) {
                     border-radius: 12px;
                     position: relative;
                     overflow: hidden;
-                    cursor: none;
+                    cursor: crosshair;
                 }
                 .ec-item {
                     position: absolute;
@@ -194,7 +220,8 @@ export default function ElementCatcher({ onComplete }) {
                     bottom: 10px;
                     width: 70px;
                     height: 50px;
-                    transition: left 0.05s ease-out;
+                    transition: left 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                    pointer-events: none;
                 }
                 .ec-basket-body {
                     width: 100%; height: 100%;
