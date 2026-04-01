@@ -12,6 +12,7 @@ import WorldScreen from './features/world/WorldScreen';
 import BattleScreen from './features/battle/BattleScreen';
 import ChatScreen from './features/chat/ChatScreen';
 import DialogueScreen from './features/dialogue/DialogueScreen';
+import LabScreen from './features/lab/LabScreen';
 import { eventBus } from './core/EventBus';
 import { EVENTS } from './core/constants';
 
@@ -25,7 +26,6 @@ import {
   acceptQuest,
   completeQuest
 } from './core/userState';
-import { loadGameState } from './core/userState';
 import { getQuestState } from './api/client';
 
 function GameContent() {
@@ -36,6 +36,7 @@ function GameContent() {
   // Local Dashboard state moved to GameContext
   const [activeTab, setActiveTab] = useState('backpack');
   const [userData, setUserData] = useState(loadGameState());
+  const [labOpen, setLabOpen] = useState(false);
 
   useEffect(() => {
     if (!currentPlayer) {
@@ -91,6 +92,11 @@ function GameContent() {
 
       // If we are in an overlay state, allow ESC to close it
       if (key === 'escape' || e.code === 'Escape') {
+        if (labOpen) {
+          console.log('[CHEMMA] Closing Lab via ESC');
+          setLabOpen(false);
+          return;
+        }
         if (showDashboard) {
           console.log('[CHEMMA] Closing Dashboard via ESC');
           setShowDashboard(false);
@@ -99,6 +105,10 @@ function GameContent() {
           console.log('[CHEMMA] Closing Chat via ESC');
           setChatOpen(false);
         }
+        return;
+      }
+
+      if (labOpen) {
         return;
       }
 
@@ -129,7 +139,7 @@ function GameContent() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showDashboard, gameState, chatOpen, setShowDashboard, setChatOpen]);
+  }, [showDashboard, labOpen, gameState, chatOpen, setShowDashboard, setChatOpen]);
 
   // Initialize Phaser once game state becomes GAME
   useEffect(() => {
@@ -182,10 +192,14 @@ function GameContent() {
           saveGameState(next);
           return next;
         });
+      }),
+      eventBus.on(EVENTS.OPEN_CRAFT_LAB, () => {
+        setShowDashboard(false);
+        setLabOpen(true);
       })
     ];
     return () => unsubs.forEach(u => u());
-  }, []);
+  }, [setShowDashboard, setLabOpen]);
 
   // While checking  for an existing session — show nothing to avoid flicker
   if (isLoading) return null;
@@ -204,6 +218,14 @@ function GameContent() {
       <ChatScreen />
 
       {gameState === GAME_STATES.DIALOGUE && <DialogueScreen />}
+
+      {labOpen && (
+        <LabScreen
+          userData={userData}
+          setUserData={setUserData}
+          onClose={() => setLabOpen(false)}
+        />
+      )}
 
       {/* --- Battle UI Root --- */}
       {gameState === GAME_STATES.BATTLE && (

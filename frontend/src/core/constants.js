@@ -22,6 +22,7 @@ export const EVENTS = {
     OPEN_NPC_POPUP: 'OPEN_NPC_POPUP',
     CLOSE_NPC_POPUP: 'CLOSE_NPC_POPUP',
     TRIGGER_CHAT_WITH_PROMPT: 'chat:trigger-with-prompt',
+    OPEN_CRAFT_LAB: 'craft:open-lab',
     QUEST_ACCEPTED: 'quest:accepted',
     QUEST_COMPLETED: 'quest:completed',
     BATTLE_WON: 'battle:won'

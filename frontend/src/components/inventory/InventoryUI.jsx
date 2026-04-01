@@ -6,8 +6,6 @@ import { eventBus } from '../../core/EventBus';
 import { EVENTS } from '../../core/constants';
 import { getQuestState } from '../../api/client';
 import { useGameContext } from '../../core/GameContext';
-import { craftRecipeFromInventory, canCraftRecipe } from '../../core/alchemy';
-import { saveGameState } from '../../core/userState';
 
 export default function InventoryUI({
   activeTab = 'backpack',
@@ -20,7 +18,6 @@ export default function InventoryUI({
   const { questState, setQuestState } = useGameContext();
   const [questLoading, setQuestLoading] = useState(false);
   const [questError, setQuestError] = useState('');
-
   useEffect(() => {
     if (activeTab !== 'quests') return;
 
@@ -58,6 +55,7 @@ export default function InventoryUI({
     { id: 'codex', label: 'CODEX', icon: '📖' },
     { id: 'quests', label: 'QUESTS', icon: '📜' },
   ];
+  const activeTabLabel = tabs.find(t => t.id === activeTab)?.label || 'BACKPACK';
 
   return (
     <div className="rpg-overlay dashboard-overlay animate-scale-up">
@@ -92,7 +90,7 @@ export default function InventoryUI({
         <div className="content-header">
           <div className="header-flex">
             <h2 className="content-title">
-              {tabs.find(t => t.id === activeTab)?.label}
+              {activeTabLabel}
             </h2>
             {activeTab === 'codex' && (
               <div className="codex-subnav">
@@ -114,7 +112,6 @@ export default function InventoryUI({
           {activeTab === 'backpack' && (
             <ItemsTab
               userData={userData}
-              setUserData={setUserData}
               onClose={onClose}
             />
           )}
@@ -179,65 +176,6 @@ function CompoundCodex({ discovered }) {
   );
 }
 
-function CraftingPanel({ userData, setUserData }) {
-  const [craftNotice, setCraftNotice] = useState('');
-
-  const handleCraft = (recipeId) => {
-    try {
-      const nextState = craftRecipeFromInventory(userData, recipeId);
-      if (setUserData) {
-        setUserData(nextState);
-      }
-      saveGameState(nextState);
-      setCraftNotice(`สร้าง ${recipeId} สำเร็จแล้ว`);
-    } catch (error) {
-      setCraftNotice(error.message || 'Craft failed');
-    }
-  };
-
-  return (
-    <section className="inventory-section">
-      <h3 className="section-subtitle">CRAFT LAB (ผสมสาร)</h3>
-      {craftNotice && <p className="recipe-desc" style={{ marginBottom: '12px' }}>{craftNotice}</p>}
-      <div className="recipe-grid">
-        {RECIPES.map(recipe => {
-          const craftable = canCraftRecipe(userData.inventory, recipe);
-          return (
-            <div key={recipe.id} className={`recipe-card ${craftable ? 'discovered' : 'locked'}`}>
-              <div className="recipe-icon" style={{ color: craftable ? recipe.color : '#444' }}>
-                {craftable ? '🧪' : '🔒'}
-              </div>
-              <div className="recipe-info">
-                <h4 className="recipe-name" dangerouslySetInnerHTML={{ __html: formatFormula(recipe.name) }} />
-                <div className="recipe-formula">
-                  {Object.entries(recipe.formula).map(([el, qty]) => (
-                    <span key={el} className="formula-part">
-                      <span className="formula-el">{el}</span>
-                      {qty > 1 && <sub className="formula-qty">{qty}</sub>}
-                    </span>
-                  ))}
-                </div>
-                <div className="recipe-stats">
-                  <span className="stat-dmg">DMG: {recipe.damage}</span>
-                  <span className="stat-status">{recipe.status}</span>
-                </div>
-                {recipe.desc && <p className="recipe-desc">{recipe.desc}</p>}
-                <button
-                  className="sidebar-close"
-                  style={{ marginTop: '12px' }}
-                  onClick={() => handleCraft(recipe.id)}
-                  disabled={!craftable}
-                >
-                  {craftable ? 'CRAFT CARD' : 'NOT ENOUGH ELEMENTS'}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
 
 /**
  * ItemsTab
@@ -254,8 +192,6 @@ function ItemsTab({ userData, setUserData, onClose }) {
 
   return (
     <div className="inventory-scroll animate-fade-in">
-      <CraftingPanel userData={userData} setUserData={setUserData} />
-
       {/* --- ELEMENTS SECTION --- */}
       {elements.length > 0 && (
         <section className="inventory-section">
