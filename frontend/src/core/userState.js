@@ -78,3 +78,34 @@ export const addXP = (currentState, amount) => {
 
     return { ...currentState, xp, level, nextLevelXP, leveledUp };
 };
+
+export const acceptQuest = (currentState, questData) => {
+    const quests = [...(currentState.quests || [])];
+    if (quests.find(q => q.id === questData.id)) return currentState;
+    
+    quests.push({
+        ...questData,
+        status: 'active'
+    });
+    return { ...currentState, quests };
+};
+
+export const completeQuest = (currentState, questId) => {
+    const quests = (currentState.quests || []).map(q => 
+        q.id === questId ? { ...q, status: 'completed' } : q
+    );
+    return { ...currentState, quests };
+};
+
+export const addInventoryItem = (currentState, itemId, quantity) => {
+    const inventory = [...(currentState.inventory || [])];
+    const itemIndex = inventory.findIndex(i => i.id === itemId);
+    
+    if (itemIndex > -1) {
+        inventory[itemIndex].quantity += quantity;
+    } else {
+        inventory.push({ id: itemId, quantity });
+    }
+    
+    return { ...currentState, inventory };
+};

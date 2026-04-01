@@ -13,6 +13,12 @@ export default function DialogueScreen() {
             eventBus.emit(EVENTS.START_BATTLE);
         } else if (choiceId === 'leave') {
             eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+        } else if (choiceId === 'accept_quest' && npcDialogue.questData) {
+            eventBus.emit(EVENTS.QUEST_ACCEPTED, npcDialogue.questData);
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+        } else if (choiceId === 'complete_quest' && npcDialogue.rewardData) {
+            eventBus.emit(EVENTS.QUEST_COMPLETED, npcDialogue.rewardData);
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
         }
     };
 

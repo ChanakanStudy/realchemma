@@ -15,13 +15,20 @@ import { EVENTS } from './core/constants';
 
 // Dashboard Imports
 import InventoryUI from './components/inventory/InventoryUI';
-import { loadGameState } from './core/userState';
+import {
+  loadGameState,
+  saveGameState,
+  addXP,
+  addInventoryItem,
+  acceptQuest,
+  completeQuest
+} from './core/userState';
 
 function GameContent() {
   const { gameState, showDashboard, setShowDashboard, chatOpen, setChatOpen } = useGameContext();
   const { currentPlayer, isLoading } = useAuth();
   const gameInitialized = useRef(false);
-  
+
   // Local Dashboard state moved to GameContext
   const [activeTab, setActiveTab] = useState('backpack');
   const [userData, setUserData] = useState(loadGameState());
@@ -34,18 +41,18 @@ function GameContent() {
 
       const key = e.key.toLowerCase();
       console.log(`[CHEMMA] Key pressed: ${key} (State: ${gameState}, Dashboard: ${showDashboard}, Chat: ${chatOpen})`);
-      
+
       // If we are in an overlay state, allow ESC to close it
       if (key === 'escape' || e.code === 'Escape') {
-          if (showDashboard) {
-            console.log('[CHEMMA] Closing Dashboard via ESC');
-            setShowDashboard(false);
-          }
-          if (chatOpen) {
-            console.log('[CHEMMA] Closing Chat via ESC');
-            setChatOpen(false);
-          }
-          return;
+        if (showDashboard) {
+          console.log('[CHEMMA] Closing Dashboard via ESC');
+          setShowDashboard(false);
+        }
+        if (chatOpen) {
+          console.log('[CHEMMA] Closing Chat via ESC');
+          setChatOpen(false);
+        }
+        return;
       }
 
       // Priority: Handle 'B' (Inventory) - Always toggle unless in a blocking state like typing
@@ -62,8 +69,8 @@ function GameContent() {
       // Handle 'F' (Interaction) - Blocked if Dashboard is open
       if (key === 'f' || e.code === 'KeyF') {
         if (showDashboard) {
-           console.log('[CHEMMA] "F" blocked because Dashboard is open');
-           return;
+          console.log('[CHEMMA] "F" blocked because Dashboard is open');
+          return;
         }
         // If chat is already open, maybe we don't want to re-trigger? 
         // But for now, App.jsx handles the 'F' to emit interaction but WorldScene handles the response
@@ -85,7 +92,55 @@ function GameContent() {
     }
   }, [gameState]);
 
-  // While checking localStorage for an existing session — show nothing to avoid flicker
+  // Handle Quest & Battle events and state persistence
+  useEffect(() => {
+    const unsubs = [
+      eventBus.on(EVENTS.QUEST_ACCEPTED, (questData) => {
+        setUserData(prev => {
+          const next = acceptQuest(prev, questData);
+          saveGameState(next);
+          return next;
+        });
+      }),
+      eventBus.on(EVENTS.QUEST_COMPLETED, (data) => {
+        // data: { id, xp, items: [{id, qty}] }
+        setUserData(prev => {
+          let next = completeQuest(prev, data.id);
+          next = addXP(next, data.xp || 0);
+          if (data.items) {
+            data.items.forEach(item => {
+              next = addInventoryItem(next, item.id, item.qty);
+            });
+          }
+          saveGameState(next);
+          return next;
+        });
+
+        // Visual feedback
+        const flash = document.getElementById('flashScreen');
+        if (flash) {
+          flash.classList.add('active');
+          setTimeout(() => flash.classList.remove('active'), 1000);
+        }
+      }),
+      eventBus.on(EVENTS.BATTLE_WON, () => {
+        setUserData(prev => {
+          const next = {
+            ...prev,
+            stats: {
+              ...(prev.stats || {}),
+              wins: (prev.stats?.wins || 0) + 1
+            }
+          };
+          saveGameState(next);
+          return next;
+        });
+      })
+    ];
+    return () => unsubs.forEach(u => u());
+  }, []);
+
+  // While checking  for an existing session — show nothing to avoid flicker
   if (isLoading) return null;
 
   // Not logged in → show Login screen (blocks ALL game content)
@@ -96,9 +151,9 @@ function GameContent() {
       <div id="game-container"></div>
 
       {gameState === GAME_STATES.MENU && <MenuScreen />}
-                                        
-      {(gameState === GAME_STATES.GAME || gameState === GAME_STATES.DIALOGUE) && <WorldScreen />}
-      
+
+      {(gameState === GAME_STATES.GAME || gameState === GAME_STATES.DIALOGUE) && <WorldScreen userData={userData} />}
+
       <ChatScreen />
 
       {gameState === GAME_STATES.DIALOGUE && <DialogueScreen />}
@@ -112,11 +167,11 @@ function GameContent() {
 
       {/* --- Dashboard (Inventory, Codex, Quests) --- */}
       {showDashboard && (
-        <InventoryUI 
+        <InventoryUI
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           userData={userData}
-          onClose={() => setShowDashboard(false)} 
+          onClose={() => setShowDashboard(false)}
         />
       )}
 

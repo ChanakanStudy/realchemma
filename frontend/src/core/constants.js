@@ -21,7 +21,10 @@ export const EVENTS = {
     UI_INTERACTION: 'ui:interaction',
     OPEN_NPC_POPUP: 'OPEN_NPC_POPUP',
     CLOSE_NPC_POPUP: 'CLOSE_NPC_POPUP',
-    TRIGGER_CHAT_WITH_PROMPT: 'chat:trigger-with-prompt'
+    TRIGGER_CHAT_WITH_PROMPT: 'chat:trigger-with-prompt',
+    QUEST_ACCEPTED: 'quest:accepted',
+    QUEST_COMPLETED: 'quest:completed',
+    BATTLE_WON: 'battle:won'
 };
 
 export const MAX_PLAYER_HP = 300;

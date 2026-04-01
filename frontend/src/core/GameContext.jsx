@@ -36,6 +36,12 @@ export const GameProvider = ({ children }) => {
             eventBus.on(EVENTS.CLOSE_NPC_POPUP, () => {
                 setNpcDialogue(null);
                 setGameState(GAME_STATES.GAME);
+            }),
+            eventBus.on(EVENTS.QUEST_ACCEPTED, (data) => {
+                console.log('[QUEST] Accepted Event', data);
+            }),
+            eventBus.on(EVENTS.QUEST_COMPLETED, (id) => {
+                console.log('[QUEST] Completed Event', id);
             })
         ];
 

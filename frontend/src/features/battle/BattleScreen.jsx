@@ -9,6 +9,8 @@ import {
   matchRecipe,
   calculateQTEResult
 } from './battleLogic';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 // ==========================================
 // 🎬 MAIN BATTLE COMPONENT
@@ -59,7 +61,13 @@ export default function BattleScene({ onQuitBattle }) {
   const activeBoss = activeBossId ? BOSS_DATABASE[activeBossId] : null;
 
   const addLog = useCallback((msg) => setLogs(prev => [msg, ...prev].slice(0, 5)), []);
-  const endGame = useCallback((isWin, reason) => { setPhase(5); addLog(reason); }, [addLog]);
+  const endGame = useCallback((isWin, reason) => { 
+    setPhase(5); 
+    addLog(reason); 
+    if (isWin) {
+      eventBus.emit(EVENTS.BATTLE_WON);
+    }
+  }, [addLog]);
 
   const startQuest = (bossId) => {
     const target = BOSS_DATABASE[bossId];

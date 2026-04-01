@@ -82,6 +82,33 @@ export default class WorldScene extends Phaser.Scene {
                     master.npcId = 'battle_master';
                     this.npcs.add(master);
                     this.tweens.add({ targets: master, scale: 1.05, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+                } else if (cell === 14 || cell === 15 || cell === 16 || cell === 17) {
+                    // 🧪 Lab Area Logic
+                    if (c >= 29) { // Ensure we are in the lab zone
+                        this.add.sprite(x, y, 't_lab_floor').setDepth(0);
+                    }
+                    
+                    if (cell === 14) { // Professor Atom
+                        const chem = this.physics.add.sprite(x, y, 'professor').setDepth(y);
+                        chem.body.setSize(30, 20).setOffset(5, 20);
+                        chem.setImmovable(true);
+                        chem.npcId = 'chemist';
+                        this.npcs.add(chem);
+                        this.tweens.add({ targets: chem, y: y - 5, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+                    } else if (cell === 15) { // Lab Table
+                        const table = this.physics.add.sprite(x, y, 'lab_table').setDepth(y);
+                        table.setImmovable(true);
+                        table.isLabTable = true;
+                        this.npcs.add(table); 
+                    } else if (cell === 16) { // Lab Shelf
+                        this.add.sprite(x, y, 'lab_shelf').setDepth(y);
+                    }
+                } else if (cell === 18) { // Lab Wall (Metallic)
+                    this.add.sprite(x, y, 'lab_wall').setDepth(y);
+                    this.walls.create(x, y, null).setSize(this.tileSize, this.tileSize).setVisible(false);
+                } else if (cell === 19) { // Lab Door (Entrance Frame)
+                    this.add.sprite(x, y, 't_lab_floor').setDepth(0);
+                    this.add.sprite(x, y, 'lab_door').setDepth(y);
                 } else if (cell === 12) { // Pine Tree
                     // 🌲 Rendered procedurally
                     const tree = this.trees.create(x, y - 24, 't_pine_tree');
@@ -139,7 +166,14 @@ export default class WorldScene extends Phaser.Scene {
 
         this.unsubscribeInteraction = eventBus.on(EVENTS.UI_INTERACTION, () => {
             if (this.interactionTarget) {
-                this.handleInteraction(this.interactionTarget);
+                if (this.interactionTarget.isLabTable) {
+                    // Open Codex directly
+                    eventBus.emit(EVENTS.TRIGGER_CHAT_WITH_PROMPT, "ข้าขอข้อมูลธาตุและสารประกอบทั้งหมดจากฐานข้อมูลแลปหน่อย");
+                    // Optionally open the Periodic Table state if we had a direct state for it
+                    // For now, opening Chat with a prompt is a great "Scientist" way
+                } else {
+                    this.handleInteraction(this.interactionTarget);
+                }
             }
         });
 
@@ -276,6 +310,87 @@ export default class WorldScene extends Phaser.Scene {
                     { id: 'leave', label: 'ยังไม่พร้อม' }
                 ]
             });
+        } else if (target === 'chemist') {
+            const userData = JSON.parse(localStorage.getItem('chemma_game_data') || '{}');
+            const quests = userData.quests || [];
+            const carbonQuest = quests.find(q => q.id === 'carbon_hunt');
+            const battleQuest = quests.find(q => q.id === 'battle_quest');
+            
+            if (!carbonQuest || carbonQuest.status !== 'completed') {
+                // Phase 1: Carbon Hunt (Already implemented)
+                if (!carbonQuest) {
+                    eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                        name: 'ศาสตราจารย์อะตอม',
+                        message: 'สวัสดีเจ้าหนู! ฉันกำลังต้องการ Carbon (C) 10 ชิ้น เพื่อนำมาวิจัยโครงสร้างเพชรสังเคราะห์ เธอช่วยหามาให้หน่อยได้ไหม?',
+                        choices: [
+                            { id: 'accept_quest', label: 'รับเควส (ตกลงครับ)' },
+                            { id: 'leave', label: 'ยังไม่ว่างครับ' }
+                        ],
+                        questData: {
+                            id: 'carbon_hunt',
+                            title: 'เตาปฏิกรณ์ที่หิวกระหาย',
+                            objective: 'รวบรวมธาตุ Carbon (C) 10 ชิ้น'
+                        }
+                    });
+                } else {
+                    const carbonCount = (userData.inventory || []).find(i => i.id === 'C')?.quantity || 0;
+                    if (carbonCount >= 10) {
+                        eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                            name: 'ศาสตราจารย์อะตอม',
+                            message: `โอ้โห! เธอหา Carbon มาครบ 10 ชิ้นแล้วจริงๆ ด้วย ยอดเยี่ยมมาก! นี่คือรางวัลของเธอ`,
+                            choices: [{ id: 'complete_quest', label: 'ส่งเควส (รับรางวัล)' }],
+                            rewardData: { id: 'carbon_hunt', xp: 200, items: [{ id: 'O', qty: 5 }] }
+                        });
+                    } else {
+                        eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                            name: 'ศาสตราจารย์อะตอม',
+                            message: `ยังรวบรวม Carbon (C) ไม่ครบเลยนะ (ขาดอีก ${10 - carbonCount} ชิ้น) พยายามเข้า!`,
+                            choices: [{ id: 'leave', label: 'รับทราบครับ!' }]
+                        });
+                    }
+                }
+            } else if (!battleQuest || battleQuest.status !== 'completed') {
+                // Phase 2: Combat Test
+                if (!battleQuest) {
+                    eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                        name: 'ศาสตราจารย์อะตอม',
+                        message: 'เก่งมากเจ้าหนู! ต่อไปฉันอยากเห็นฝีมือการต่อสู้ของเธอ ไปเอาชนะในลานประลองของ Battle Master ให้ฉันดูซัก 1 ครั้งสิ!',
+                        choices: [
+                            { id: 'accept_quest', label: 'รับเควส (ลุยเลย!)' },
+                            { id: 'leave', label: 'ขอพักก่อนครับ' }
+                        ],
+                        questData: {
+                            id: 'battle_quest',
+                            title: 'บททดสอบแห่งสมรภูมิ',
+                            objective: 'เอาชนะการต่อสู้ 1 ครั้ง',
+                            startWins: userData.stats?.wins || 0
+                        }
+                    });
+                } else {
+                    const currentWins = userData.stats?.wins || 0;
+                    if (currentWins > battleQuest.startWins) {
+                        eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                            name: 'ศาสตราจารย์อะตอม',
+                            message: 'สุดยอดไปเลย! เธอพิสูจน์แล้วว่าเหมาะจะเป็นนักแปรธาตุสายบวกจริงๆ รับนี่ไปสิ!',
+                            choices: [{ id: 'complete_quest', label: 'ส่งเควส (รับรางวัลใหญ่)' }],
+                            rewardData: { id: 'battle_quest', xp: 500, items: [{ id: 'Au', qty: 1 }] }
+                        });
+                    } else {
+                        eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                            name: 'ศาสตราจารย์อะตอม',
+                            message: 'เธอยังไม่ได้เอาชนะใครในลานประลองเลยนะ ไปแสดงฝีมือให้ Battle Master เห็นหน่อย!',
+                            choices: [{ id: 'leave', label: 'กำลังไปครับ!' }]
+                        });
+                    }
+                }
+            } else {
+                // All quests completed
+                eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                    name: 'ศาสตราจารย์อะตอม',
+                    message: 'ขอบใจมากนะเจ้าหนู! ทั้งงานวิจัยและการทดสอบฝีมือ เธอทำได้ดีเยี่ยมจริงๆ',
+                    choices: [{ id: 'leave', label: 'ยินดีครับอาจารย์!' }]
+                });
+            }
         }
     }
 
@@ -318,8 +433,14 @@ export default class WorldScene extends Phaser.Scene {
         createPixelTexture('player', ART_DATA.player_d1); // Idle front
         createPixelTexture('npc_oracle', ART_DATA.npc_spark);
         createPixelTexture('npc_master', ART_DATA.battle_master);
+        createPixelTexture('professor', ART_DATA.professor);
         createPixelTexture('crystal', ART_DATA.crystal, 4);
         createPixelTexture('t_pine_tree', ART_DATA.t_pine_tree, 2);
+        createPixelTexture('lab_table', ART_DATA.lab_table, 3);
+        createPixelTexture('lab_shelf', ART_DATA.lab_shelf, 3);
+        createPixelTexture('t_lab_floor', ART_DATA.t_lab_floor, 3);
+        createPixelTexture('lab_wall', ART_DATA.lab_wall, 3);
+        createPixelTexture('lab_door', ART_DATA.lab_door, 3);
         
         // Placeholder for house/building if not in ART_DATA (reusing patterns)
         createPixelTexture('building', [
