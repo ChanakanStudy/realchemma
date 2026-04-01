@@ -8,32 +8,43 @@ export default function DialogueScreen() {
 
     if (!npcDialogue) return null;
 
-    const questNpc = npcDialogue.npcId === 'battle_master';
+    const questNpc = npcDialogue.npcId === 'quest_giver';
+    const battleNpc = npcDialogue.npcId === 'battle_master';
     const activeQuest = questState?.active_quest ?? null;
     const nextQuest = questState?.available_quests?.[0] ?? null;
 
-    const startQuestBattle = async () => {
+    const acceptQuestAndClose = async () => {
         try {
-            let questToPlay = activeQuest || nextQuest;
+            const questToAccept = activeQuest || nextQuest;
 
-            if (!questToPlay) {
+            if (!questToAccept) {
                 return;
             }
 
             if (!activeQuest) {
-                const updatedState = await acceptQuest(questToPlay.id);
+                const updatedState = await acceptQuest(questToAccept.id);
                 setQuestState(updatedState);
-                questToPlay = updatedState.active_quest;
             }
 
             setNpcDialogue(null);
-            setGameState(GAME_STATES.BATTLE);
+            setGameState(GAME_STATES.GAME);
         } catch (error) {
             console.error('[CHEMMA] Failed to accept quest:', error);
         }
     };
 
     const handleChoice = (choiceId) => {
+        if (battleNpc && choiceId === 'fight') {
+            setNpcDialogue(null);
+            setGameState(GAME_STATES.BATTLE);
+            return;
+        }
+
+        if (questNpc && choiceId === 'quest_brief') {
+            void acceptQuestAndClose();
+            return;
+        }
+
         if (choiceId === 'leave') {
             setNpcDialogue(null);
             setGameState(GAME_STATES.GAME);
@@ -65,8 +76,27 @@ export default function DialogueScreen() {
                         </div>
 
                         <div className="dialogue-choices">
-                            <button className="dialogue-choice-btn primary" onClick={startQuestBattle} disabled={!activeQuest && !nextQuest}>
-                                {activeQuest ? 'เริ่มการประลอง' : 'รับภารกิจและเริ่มการประลอง'}
+                            <button className="dialogue-choice-btn primary" onClick={acceptQuestAndClose} disabled={!activeQuest && !nextQuest}>
+                                {activeQuest ? 'รับทราบภารกิจ' : 'รับภารกิจ'}
+                            </button>
+                            <button
+                                className="dialogue-choice-btn"
+                                onClick={() => handleChoice('leave')}
+                            >
+                                กลับ
+                            </button>
+                        </div>
+                    </>
+                ) : battleNpc ? (
+                    <>
+                        <div className="dialogue-message">{npcDialogue.message}</div>
+
+                        <div className="dialogue-choices">
+                            <button
+                                className="dialogue-choice-btn primary"
+                                onClick={() => handleChoice('fight')}
+                            >
+                                เข้าสู่การประลอง
                             </button>
                             <button
                                 className="dialogue-choice-btn"

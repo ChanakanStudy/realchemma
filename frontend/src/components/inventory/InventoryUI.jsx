@@ -6,12 +6,14 @@ import { eventBus } from '../../core/EventBus';
 import { EVENTS } from '../../core/constants';
 import { getQuestState } from '../../api/client';
 import { useGameContext } from '../../core/GameContext';
-
+import { craftRecipeFromInventory, canCraftRecipe } from '../../core/alchemy';
+import { saveGameState } from '../../core/userState';
 
 export default function InventoryUI({
   activeTab = 'backpack',
   setActiveTab,
   userData,
+  setUserData,
   onClose
 }) {
   const [codexTab, setCodexTab] = useState('elements');
@@ -109,7 +111,13 @@ export default function InventoryUI({
         </div>
 
         <div className="content-body custom-scrollbar">
-          {activeTab === 'backpack' && <ItemsTab userData={userData} onClose={onClose} />}
+          {activeTab === 'backpack' && (
+            <ItemsTab
+              userData={userData}
+              setUserData={setUserData}
+              onClose={onClose}
+            />
+          )}
           {activeTab === 'codex' && (
             codexTab === 'elements'
               ? <PeriodicTable discoveredElements={userData.discovered} embedded={true} />
@@ -171,11 +179,71 @@ function CompoundCodex({ discovered }) {
   );
 }
 
+function CraftingPanel({ userData, setUserData }) {
+  const [craftNotice, setCraftNotice] = useState('');
+
+  const handleCraft = (recipeId) => {
+    try {
+      const nextState = craftRecipeFromInventory(userData, recipeId);
+      if (setUserData) {
+        setUserData(nextState);
+      }
+      saveGameState(nextState);
+      setCraftNotice(`สร้าง ${recipeId} สำเร็จแล้ว`);
+    } catch (error) {
+      setCraftNotice(error.message || 'Craft failed');
+    }
+  };
+
+  return (
+    <section className="inventory-section">
+      <h3 className="section-subtitle">CRAFT LAB (ผสมสาร)</h3>
+      {craftNotice && <p className="recipe-desc" style={{ marginBottom: '12px' }}>{craftNotice}</p>}
+      <div className="recipe-grid">
+        {RECIPES.map(recipe => {
+          const craftable = canCraftRecipe(userData.inventory, recipe);
+          return (
+            <div key={recipe.id} className={`recipe-card ${craftable ? 'discovered' : 'locked'}`}>
+              <div className="recipe-icon" style={{ color: craftable ? recipe.color : '#444' }}>
+                {craftable ? '🧪' : '🔒'}
+              </div>
+              <div className="recipe-info">
+                <h4 className="recipe-name" dangerouslySetInnerHTML={{ __html: formatFormula(recipe.name) }} />
+                <div className="recipe-formula">
+                  {Object.entries(recipe.formula).map(([el, qty]) => (
+                    <span key={el} className="formula-part">
+                      <span className="formula-el">{el}</span>
+                      {qty > 1 && <sub className="formula-qty">{qty}</sub>}
+                    </span>
+                  ))}
+                </div>
+                <div className="recipe-stats">
+                  <span className="stat-dmg">DMG: {recipe.damage}</span>
+                  <span className="stat-status">{recipe.status}</span>
+                </div>
+                {recipe.desc && <p className="recipe-desc">{recipe.desc}</p>}
+                <button
+                  className="sidebar-close"
+                  style={{ marginTop: '12px' }}
+                  onClick={() => handleCraft(recipe.id)}
+                  disabled={!craftable}
+                >
+                  {craftable ? 'CRAFT CARD' : 'NOT ENOUGH ELEMENTS'}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 /**
  * ItemsTab
  * Splits the inventory into Elements and Compounds sections.
  */
-function ItemsTab({ userData, onClose }) {
+function ItemsTab({ userData, setUserData, onClose }) {
   const elements = userData.inventory.filter(item =>
     ELEMENTS.find(e => e.symbol === item.id)
   );
@@ -186,6 +254,8 @@ function ItemsTab({ userData, onClose }) {
 
   return (
     <div className="inventory-scroll animate-fade-in">
+      <CraftingPanel userData={userData} setUserData={setUserData} />
+
       {/* --- ELEMENTS SECTION --- */}
       {elements.length > 0 && (
         <section className="inventory-section">
@@ -224,11 +294,8 @@ function ItemsTab({ userData, onClose }) {
 
 function ItemCard({ item, info, isCompound = false, onCloseDashboard }) {
   const handleClick = () => {
-    // 1. Close the dashboard first so the chat is visible
     if (onCloseDashboard) onCloseDashboard();
-    
-    // 2. Emit event to open chat with a pre-filled prompt
-    // Use setTimeout to ensure the dashboard closure doesn't conflict with chat opening
+
     setTimeout(() => {
       eventBus.emit(EVENTS.TRIGGER_CHAT_WITH_PROMPT, `ช่วยอธิบายเกร็ดความรู้เกี่ยวกับ ${info.name} หน่อยครับ`);
     }, 200);
@@ -246,11 +313,9 @@ function ItemCard({ item, info, isCompound = false, onCloseDashboard }) {
 }
 
 function QuestsTab({ questState, isLoading, error }) {
-  const quests = questState?.quests ?? [];
+  const quests = (questState?.quests ?? []).filter(q => q.status === 'active' || q.status === 'completed');
   const activeQuest = questState?.active_quest ?? null;
-  const nextQuest = questState?.available_quests?.[0] ?? null;
-  const completedCount = questState?.completed_quests?.length ?? 0;
-  const questChainComplete = questState?.quest_chain_complete ?? false;
+  const completedCount = quests.filter(q => q.status === 'completed').length;
 
   return (
     <div className="quests-list animate-fade-in">
@@ -278,16 +343,8 @@ function QuestsTab({ questState, isLoading, error }) {
           <strong>{activeQuest ? activeQuest.title : 'None'}</strong>
         </div>
         <div className="quest-summary-row">
-          <span>Next</span>
-          <strong>{nextQuest ? nextQuest.title : 'Locked'}</strong>
-        </div>
-        <div className="quest-summary-row">
           <span>Completed</span>
           <strong>{completedCount} / {quests.length}</strong>
-        </div>
-        <div className="quest-summary-row">
-          <span>Chain</span>
-          <strong>{questChainComplete ? 'Complete' : 'In Progress'}</strong>
         </div>
       </div>
 

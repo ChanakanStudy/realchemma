@@ -442,7 +442,7 @@ export default function BattleScene({ onQuitBattle }) {
 
   const hasStatus = (name) => monsterStatuses.some(s => s.name === name);
   const isAnyUltimateReady = ULTIMATES.some(ult => ult.req.every(hasStatus));
-  const currentQuest = questBattle || questState?.available_quests?.[0] || null;
+  const currentQuest = questBattle || null;
 
   // ==========================================
   // 🗺️ PHASE 0: QUEST BOARD MENU

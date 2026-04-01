@@ -162,6 +162,7 @@ function GameContent() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           userData={userData}
+          setUserData={setUserData}
           questState={questState}
           onClose={() => setShowDashboard(false)} 
         />

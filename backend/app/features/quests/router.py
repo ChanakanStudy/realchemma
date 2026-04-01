@@ -10,7 +10,6 @@ from .service import accept_quest, complete_quest, get_quest_state
 
 router = APIRouter()
 
-
 @router.get("/state", response_model=QuestStateResponse)
 async def read_quest_state(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return get_quest_state(db, current_user.id)

@@ -12,7 +12,7 @@ DEFAULT_QUESTS = [
         "title": "Trial I: Homunculus Omega",
         "description": "บททดสอบแรกของนักเล่นแร่แปรธาตุ เพื่อพิสูจน์ว่าพร้อมออกสู่เส้นทางประลองแล้ว",
         "objective": "Defeat Homunculus Omega",
-        "npc_id": "battle_master",
+        "npc_id": "quest_giver",
         "boss_id": "homunculus",
         "boss_name": "Homunculus Omega",
         "order_index": 1,
@@ -25,7 +25,7 @@ DEFAULT_QUESTS = [
         "title": "Trial II: Crystal Golem",
         "description": "บททดสอบถัดไปที่เน้นความแม่นยำและการรับมือกับสิ่งมีชีวิตที่ถึกและหนักแน่น",
         "objective": "Defeat Crystal Golem",
-        "npc_id": "battle_master",
+        "npc_id": "quest_giver",
         "boss_id": "crystal_golem",
         "boss_name": "Crystal Golem",
         "order_index": 2,
@@ -38,7 +38,7 @@ DEFAULT_QUESTS = [
         "title": "Trial III: Mutated Spore",
         "description": "บททดสอบสุดท้ายที่ผสมความเสี่ยง ความเร็ว และพิษร้ายแรง",
         "objective": "Defeat Mutated Spore",
-        "npc_id": "battle_master",
+        "npc_id": "quest_giver",
         "boss_id": "toxic_spore",
         "boss_name": "Mutated Spore",
         "order_index": 3,
@@ -97,6 +97,11 @@ def seed_default_quest_definitions(db: Session):
     for quest_data in DEFAULT_QUESTS:
         existing = db.query(QuestDefinition).filter(QuestDefinition.id == quest_data["id"]).first()
         if existing:
+            needs_update = any(getattr(existing, key) != value for key, value in quest_data.items())
+            if needs_update:
+                for key, value in quest_data.items():
+                    setattr(existing, key, value)
+                changed = True
             continue
         db.add(QuestDefinition(**quest_data))
         changed = True
