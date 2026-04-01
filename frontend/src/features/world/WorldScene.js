@@ -109,6 +109,13 @@ export default class WorldScene extends Phaser.Scene {
                 } else if (cell === 19) { // Lab Door (Entrance Frame)
                     this.add.sprite(x, y, 't_lab_floor').setDepth(0);
                     this.add.sprite(x, y, 'lab_door').setDepth(y);
+                } else if (cell === 11) { // Quest Giver NPC
+                    const giver = this.physics.add.sprite(x, y, 'npc_quest_giver').setDepth(y);
+                    giver.body.setSize(30, 20).setOffset(5, 20);
+                    giver.setImmovable(true);
+                    giver.npcId = 'quest_giver';
+                    this.npcs.add(giver);
+                    this.tweens.add({ targets: giver, scale: 1.04, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
                 } else if (cell === 12) { // Pine Tree
                     // 🌲 Rendered procedurally
                     const tree = this.trees.create(x, y - 24, 't_pine_tree');
@@ -300,14 +307,24 @@ export default class WorldScene extends Phaser.Scene {
     handleInteraction(target) {
         if (target === 'oracle') {
             eventBus.emit(EVENTS.OPEN_CHAT);      
+        } else if (target === 'quest_giver') {
+            eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                npcId: 'quest_giver',
+                name: 'Quest Giver',
+                message: 'ข้ามีนิติสารภารกิจ 3 ขั้นสำหรับนักเล่นแร่แปรธาตุ หากเจ้าพร้อมแล้วจงรับเควสจากข้า',
+                choices: [
+                    { id: 'quest_brief', label: 'ดูรายละเอียดเควส' },
+                    { id: 'leave', label: 'กลับ' }
+                ]
+            });
         } else if (target === 'battle_master') {
             eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
                 npcId: 'battle_master',
                 name: 'Battle Master',
-                message: 'พร้อมจะพิสูจน์ฝีมือคุมเคมีวิญญาณแล้วหรือยัง?',
+                message: 'หากเจ้ามั่นใจ จงเข้าสู่การประลอง ณ ลานต่อสู้',
                 choices: [
-                    { id: 'fight', label: 'เข้าสู่ลานประลอง' },
-                    { id: 'leave', label: 'ยังไม่พร้อม' }
+                    { id: 'fight', label: 'เข้าสู่การประลอง' },
+                    { id: 'leave', label: 'กลับ' }
                 ]
             });
         } else if (target === 'chemist') {
@@ -432,6 +449,7 @@ export default class WorldScene extends Phaser.Scene {
         // Entities
         createPixelTexture('player', ART_DATA.player_d1); // Idle front
         createPixelTexture('npc_oracle', ART_DATA.npc_spark);
+        createPixelTexture('npc_quest_giver', ART_DATA.quest_giver);
         createPixelTexture('npc_master', ART_DATA.battle_master);
         createPixelTexture('professor', ART_DATA.professor);
         createPixelTexture('crystal', ART_DATA.crystal, 4);

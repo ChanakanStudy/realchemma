@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+
+
 import { GameProvider, useGameContext } from './core/GameContext';
 import { AuthProvider, useAuth } from './core/AuthContext';
 import { GAME_STATES } from './core/constants';
@@ -23,15 +25,60 @@ import {
   acceptQuest,
   completeQuest
 } from './core/userState';
+import { loadGameState } from './core/userState';
+import { getQuestState } from './api/client';
 
 function GameContent() {
-  const { gameState, showDashboard, setShowDashboard, chatOpen, setChatOpen } = useGameContext();
+  const { gameState, setGameState, showDashboard, setShowDashboard, chatOpen, setChatOpen, questState, setQuestState } = useGameContext();
   const { currentPlayer, isLoading } = useAuth();
   const gameInitialized = useRef(false);
 
   // Local Dashboard state moved to GameContext
   const [activeTab, setActiveTab] = useState('backpack');
   const [userData, setUserData] = useState(loadGameState());
+
+  useEffect(() => {
+    if (!currentPlayer) {
+      setQuestState(null);
+      return;
+    }
+
+    setQuestState(null);
+
+    let cancelled = false;
+
+    const syncQuestState = async () => {
+      try {
+        const serverQuestState = await getQuestState();
+        if (cancelled) return;
+
+        setQuestState(serverQuestState);
+        setUserData(prev => ({
+          ...prev,
+          quests: serverQuestState.quests,
+          questRoute: serverQuestState.active_quest?.id ?? null,
+        }));
+      } catch (error) {
+        console.error('[CHEMMA] Failed to load quest state:', error);
+      }
+    };
+
+    syncQuestState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPlayer, setQuestState]);
+
+  useEffect(() => {
+    if (!questState) return;
+
+    setUserData(prev => ({
+      ...prev,
+      quests: questState.quests,
+      questRoute: questState.active_quest?.id ?? null,
+    }));
+  }, [questState]);
 
   // Toggle Dashboard with 'B' key
   useEffect(() => {
@@ -161,7 +208,7 @@ function GameContent() {
       {/* --- Battle UI Root --- */}
       {gameState === GAME_STATES.BATTLE && (
         <div id="battle-root" style={{ display: 'block', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 100 }}>
-          <BattleScreen />
+          <BattleScreen onQuitBattle={() => setGameState(GAME_STATES.GAME)} />
         </div>
       )}
 
@@ -171,7 +218,9 @@ function GameContent() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           userData={userData}
-          onClose={() => setShowDashboard(false)}
+          setUserData={setUserData}
+          questState={questState}
+          onClose={() => setShowDashboard(false)} 
         />
       )}
 
@@ -189,4 +238,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
