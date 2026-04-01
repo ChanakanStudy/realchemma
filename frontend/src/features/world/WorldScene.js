@@ -17,13 +17,13 @@ export default class WorldScene extends Phaser.Scene {
 
         window.pScene = this;
         this.tileSize = 48;
-        
+
         // 🌑 Original Dark RPG Background
         this.cameras.main.setBackgroundColor('#1a2130');
 
         const terrainData = MAP_LAYOUT.map(row => [...row]);
         this.trees = this.physics.add.staticGroup();
-        this.walls = this.physics.add.staticGroup(); 
+        this.walls = this.physics.add.staticGroup();
         this.npcs = this.physics.add.staticGroup();
 
         const mapWidth = 40 * this.tileSize;
@@ -87,7 +87,7 @@ export default class WorldScene extends Phaser.Scene {
                     if (c >= 29) { // Ensure we are in the lab zone
                         this.add.sprite(x, y, 't_lab_floor').setDepth(0);
                     }
-                    
+
                     if (cell === 14) { // Professor Atom
                         const chem = this.physics.add.sprite(x, y, 'professor').setDepth(y);
                         chem.body.setSize(30, 20).setOffset(5, 20);
@@ -99,10 +99,17 @@ export default class WorldScene extends Phaser.Scene {
                         const table = this.physics.add.sprite(x, y, 'lab_table').setDepth(y);
                         table.setImmovable(true);
                         table.isLabTable = true;
-                        this.npcs.add(table); 
+                        this.npcs.add(table);
                     } else if (cell === 16) { // Lab Shelf
                         this.add.sprite(x, y, 'lab_shelf').setDepth(y);
                     }
+                } else if (cell === 20) { // Lab Assistant (New)
+                    const assistant = this.physics.add.sprite(x, y, 'npc_assistant').setDepth(y);
+                    assistant.body.setSize(30, 20).setOffset(5, 20);
+                    assistant.setImmovable(true);
+                    assistant.npcId = 'assistant';
+                    this.npcs.add(assistant);
+                    this.tweens.add({ targets: assistant, y: y - 3, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
                 } else if (cell === 18) { // Lab Wall (Metallic)
                     this.add.sprite(x, y, 'lab_wall').setDepth(y);
                     this.walls.create(x, y, null).setSize(this.tileSize, this.tileSize).setVisible(false);
@@ -126,19 +133,19 @@ export default class WorldScene extends Phaser.Scene {
                 }
             }
         }
-        
+
         // Player
         this.player = this.physics.add.sprite(20 * this.tileSize, 22 * this.tileSize, 'player');
         // Native 48x48 procedural texture hitbox mapping
         this.player.body.setSize(24, 20).setOffset(12, 28);
         this.player.isTalking = false;
-        
+
         // Removed procedural additive light effect for a cleaner, fresh look
         // Physics Boundaries
         this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
         this.player.setCollideWorldBounds(true);
-        this.physics.add.collider(this.player, this.walls); 
-        this.physics.add.collider(this.player, this.trees); 
+        this.physics.add.collider(this.player, this.walls);
+        this.physics.add.collider(this.player, this.trees);
         this.physics.add.collider(this.player, this.npcs);
 
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
@@ -151,7 +158,7 @@ export default class WorldScene extends Phaser.Scene {
             S: Phaser.Input.Keyboard.KeyCodes.S,
             D: Phaser.Input.Keyboard.KeyCodes.D
         });
-        
+
         // Smooth tween applied to player for moving aesthetic instead of frame swap
         this.playerWalkTween = this.tweens.add({
             targets: this.player,
@@ -185,7 +192,7 @@ export default class WorldScene extends Phaser.Scene {
         });
 
         this.events.on('shutdown', () => {
-           if (this.unsubscribeInteraction) this.unsubscribeInteraction();
+            if (this.unsubscribeInteraction) this.unsubscribeInteraction();
         });
 
         this.input.keyboard.removeCapture('B,F,R,I,M');
@@ -196,21 +203,21 @@ export default class WorldScene extends Phaser.Scene {
         this.minimapCam = this.cameras.add(window.innerWidth - minimapSize - minimapPadding, minimapPadding, minimapSize, minimapSize)
             .setZoom(0.18)
             .setName('mini');
-        
+
         this.minimapCam.setBackgroundColor(0x1a2130);
         this.minimapCam.startFollow(this.player, true);
 
         // Circular Mask for the minimap
         this.miniCircle = this.make.graphics();
         this.miniCircle.fillStyle(0xffffff);
-        this.miniCircle.fillCircle(window.innerWidth - minimapPadding - (minimapSize/2), minimapPadding + (minimapSize/2), minimapSize/2);
+        this.miniCircle.fillCircle(window.innerWidth - minimapPadding - (minimapSize / 2), minimapPadding + (minimapSize / 2), minimapSize / 2);
         this.minimapCam.setMask(this.miniCircle.createGeometryMask());
 
         // Giant dot for player that only minimap sees
         this.minimapDot = this.add.circle(this.player.x, this.player.y, 40, 0xffff00).setDepth(200);
         this.cameras.main.ignore(this.minimapDot);
         this.minimapCam.ignore(this.fPrompt);
-        
+
         // Hide fake glows from minimap to keep it clean
         if (this.playerLight) this.minimapCam.ignore(this.playerLight);
 
@@ -220,33 +227,33 @@ export default class WorldScene extends Phaser.Scene {
             this.minimapCam.setPosition(w - minimapSize - minimapPadding, minimapPadding);
             this.miniCircle.clear();
             this.miniCircle.fillStyle(0xffffff);
-            this.miniCircle.fillCircle(w - minimapPadding - (minimapSize/2), minimapPadding + (minimapSize/2), minimapSize/2);
+            this.miniCircle.fillCircle(w - minimapPadding - (minimapSize / 2), minimapPadding + (minimapSize / 2), minimapSize / 2);
         });
 
         console.timeEnd('[CHEMMA] Scene Create');
     }
 
     update(time, delta) {
-        const isPaused = window.inChat || 
-                         window.gameState === 'BATTLE' || 
-                         window.gameState === 'DIALOGUE' || 
-                         window.isDashboardOpen || 
-                         this.player.isTalking;
+        const isPaused = window.inChat ||
+            window.gameState === 'BATTLE' ||
+            window.gameState === 'DIALOGUE' ||
+            window.isDashboardOpen ||
+            this.player.isTalking;
 
         if (!isPaused) {
             const speed = 200;
             let vx = 0;
             let vy = 0;
 
-            const left  = this.keys.A.isDown || this.cursors.left.isDown;
+            const left = this.keys.A.isDown || this.cursors.left.isDown;
             const right = this.keys.D.isDown || this.cursors.right.isDown;
-            const up    = this.keys.W.isDown || this.cursors.up.isDown;
-            const down  = this.keys.S.isDown || this.cursors.down.isDown;
+            const up = this.keys.W.isDown || this.cursors.up.isDown;
+            const down = this.keys.S.isDown || this.cursors.down.isDown;
 
-            if (left)  vx -= 1;
+            if (left) vx -= 1;
             if (right) vx += 1;
-            if (up)    vy -= 1;
-            if (down)  vy += 1;
+            if (up) vy -= 1;
+            if (down) vy += 1;
 
             if (vx !== 0 && vy !== 0) {
                 const diag = speed * 0.707;
@@ -288,7 +295,7 @@ export default class WorldScene extends Phaser.Scene {
         this.fPrompt.setVisible(false);
 
         let nearestNpc = null;
-        let minDistance = 120; 
+        let minDistance = 120;
 
         this.npcs.getChildren().forEach(npc => {
             const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y);
@@ -306,7 +313,7 @@ export default class WorldScene extends Phaser.Scene {
 
     handleInteraction(target) {
         if (target === 'oracle') {
-            eventBus.emit(EVENTS.OPEN_CHAT);      
+            eventBus.emit(EVENTS.OPEN_CHAT);
         } else if (target === 'quest_giver') {
             eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
                 npcId: 'quest_giver',
@@ -332,7 +339,7 @@ export default class WorldScene extends Phaser.Scene {
             const quests = userData.quests || [];
             const carbonQuest = quests.find(q => q.id === 'carbon_hunt');
             const battleQuest = quests.find(q => q.id === 'battle_quest');
-            
+
             if (!carbonQuest || carbonQuest.status !== 'completed') {
                 // Phase 1: Carbon Hunt (Already implemented)
                 if (!carbonQuest) {
@@ -408,6 +415,16 @@ export default class WorldScene extends Phaser.Scene {
                     choices: [{ id: 'leave', label: 'ยินดีครับอาจารย์!' }]
                 });
             }
+        } else if (target === 'assistant') {
+            eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                npcId: 'assistant',
+                name: '⚗️ เอลิมา (Elima) — นักเร่ร่อนแห่งธาตุ',
+                message: '...ข้าได้ยินเรื่องแล็บแห่งนี้มานาน สายลมพาข้ามา\n\nหากเจ้าต้องการทดสอบความรู้แห่งธาตุ... ข้าจะเป็นผู้พิสูจน์',
+                choices: [
+                    { id: 'play_minigame', label: '⚗️ รับการทดสอบจากเอลิมา' },
+                    { id: 'leave', label: 'ไว้คราวหน้า' }
+                ]
+            });
         }
     }
 
@@ -415,7 +432,7 @@ export default class WorldScene extends Phaser.Scene {
         if (this.textures.exists('t_grass')) return;
 
         console.time('[CHEMMA] Pixel Gen');
-        
+
         // --- 👾 Prodedural Pixel Art Generator ---
         // Converts the ART_DATA string arrays into Phaser Textures at runtime.
         const createPixelTexture = (key, data, pixelSize = 3) => {
@@ -423,7 +440,7 @@ export default class WorldScene extends Phaser.Scene {
             const height = data.length;
             const width = data[0].length;
             const gfx = this.make.graphics();
-            
+
             for (let r = 0; r < height; r++) {
                 for (let c = 0; c < width; c++) {
                     const char = data[r][c];
@@ -445,13 +462,14 @@ export default class WorldScene extends Phaser.Scene {
         createPixelTexture('t_water', ART_DATA.t_water);
         createPixelTexture('t_crop', ART_DATA.t_crop);
         createPixelTexture('t_fence', ART_DATA.t_fence);
-        
+
         // Entities
         createPixelTexture('player', ART_DATA.player_d1); // Idle front
         createPixelTexture('npc_oracle', ART_DATA.npc_spark);
         createPixelTexture('npc_quest_giver', ART_DATA.quest_giver);
         createPixelTexture('npc_master', ART_DATA.battle_master);
         createPixelTexture('professor', ART_DATA.professor);
+        createPixelTexture('npc_assistant', ART_DATA.npc_assistant, 3);
         createPixelTexture('crystal', ART_DATA.crystal, 4);
         createPixelTexture('t_pine_tree', ART_DATA.t_pine_tree, 2);
         createPixelTexture('lab_table', ART_DATA.lab_table, 3);
@@ -459,7 +477,7 @@ export default class WorldScene extends Phaser.Scene {
         createPixelTexture('t_lab_floor', ART_DATA.t_lab_floor, 3);
         createPixelTexture('lab_wall', ART_DATA.lab_wall, 3);
         createPixelTexture('lab_door', ART_DATA.lab_door, 3);
-        
+
         // Placeholder for house/building if not in ART_DATA (reusing patterns)
         createPixelTexture('building', [
             "KKKKKKKKKKKKKKKK", "K88888888888888K", "K88888888888888K", "K88888888888888K",

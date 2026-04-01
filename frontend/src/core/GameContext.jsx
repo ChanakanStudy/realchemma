@@ -11,6 +11,7 @@ export const GameProvider = ({ children }) => {
     const [npcDialogue, setNpcDialogue] = useState(null);
     const [showDashboard, setShowDashboard] = useState(false);
     const [questState, setQuestState] = useState(null);
+    const [minigameActive, setMinigameActive] = useState(null); // null or { id: 'symbol_matcher', etc. }
 
     useEffect(() => {
         const unsubs = [
@@ -43,6 +44,13 @@ export const GameProvider = ({ children }) => {
             }),
             eventBus.on(EVENTS.QUEST_COMPLETED, (id) => {
                 console.log('[QUEST] Completed Event', id);
+            }),
+            eventBus.on(EVENTS.OPEN_MINIGAME, (data) => {
+                console.log('[MINIGAME] Open Event', data);
+                setMinigameActive(data || { id: 'menu' });
+            }),
+            eventBus.on(EVENTS.CLOSE_MINIGAME, () => {
+                setMinigameActive(null);
             })
         ];
 
@@ -77,7 +85,12 @@ export const GameProvider = ({ children }) => {
         showDashboard,
         setShowDashboard,
         questState,
-        setQuestState
+        setQuestState,
+        minigameActive,
+        setMinigameActive: (data) => {
+            setMinigameActive(data);
+            eventBus.emit(data ? EVENTS.OPEN_MINIGAME : EVENTS.CLOSE_MINIGAME, data);
+        }
     };
 
     return (

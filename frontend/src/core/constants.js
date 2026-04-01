@@ -24,7 +24,9 @@ export const EVENTS = {
     TRIGGER_CHAT_WITH_PROMPT: 'chat:trigger-with-prompt',
     QUEST_ACCEPTED: 'quest:accepted',
     QUEST_COMPLETED: 'quest:completed',
-    BATTLE_WON: 'battle:won'
+    BATTLE_WON: 'battle:won',
+    OPEN_MINIGAME: 'minigame:open',
+    CLOSE_MINIGAME: 'minigame:close'
 };
 
 export const MAX_PLAYER_HP = 300;
