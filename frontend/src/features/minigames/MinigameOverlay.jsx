@@ -1,8 +1,10 @@
 import React from 'react';
 import { useGameContext } from '../../core/GameContext';
-import { EVENTS } from '../../core/constants';
-import { eventBus } from '../../core/EventBus';
 import SymbolMatcher from './SymbolMatcher';
+import ElementMemory from './ElementMemory';
+import AtomicSorter from './AtomicSorter';
+import ElementCatcher from './ElementCatcher';
+import LiquidMixer from './LiquidMixer';
 
 export default function MinigameOverlay() {
     const { minigameActive, setMinigameActive } = useGameContext();
@@ -29,99 +31,155 @@ export default function MinigameOverlay() {
         setMinigameActive(null);
     };
 
-    // Render active game
-    if (minigameActive.id === 'symbol_matcher') {
-        return (
-            <div className="minigame-overlay-container">
-                <div className="minigame-menu-card">
-                    <div className="minigame-menu-header" style={{marginBottom: '12px'}}>
-                        <span style={{color:'#888', fontSize:'0.8rem'}}>⚗️ บทพิสูจน์แห่งธาตุ — Symbol Matcher</span>
-                        <button className="close-btn" onClick={handleClose}>×</button>
-                    </div>
-                    <SymbolMatcher onComplete={handleGameComplete} />
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="minigame-overlay-container">
-            <div className="minigame-menu-card">
-                <div className="minigame-menu-header">
-                    <h2>⚗️ บทพิสูจน์แห่งธาตุ — เอลิมา</h2>
-                    <button className="close-btn" onClick={handleClose}>×</button>
-                </div>
+            <div className="minigame-window-frame">
+                <div className="minigame-menu-card">
+                    <div className="minigame-menu-header">
+                        <h2>⚗️ {minigameActive.id === 'menu' ? 'บทพิสูจน์แห่งธาตุ — เอลิมา' : `ระบบวิจัย: ${minigameActive.id.replace('_', ' ').toUpperCase()}`}</h2>
+                        <button className="close-btn" onClick={handleClose}>×</button>
+                    </div>
 
-                <div className="minigame-list">
-                    {games.map(game => (
-                        <div key={game.id} className="minigame-item" onClick={() => handleSelectGame(game.id)}>
-                            <div className="minigame-info">
-                                <div className="minigame-name">{game.name}</div>
-                                <div className="minigame-desc">{game.desc}</div>
+                    <div className="minigame-content">
+                        {minigameActive.id === 'menu' ? (
+                            <div className="minigame-list">
+                                {games.map(game => (
+                                    <div key={game.id} className="minigame-item" onClick={() => handleSelectGame(game.id)}>
+                                        <div className="minigame-info">
+                                            <div className="minigame-name">{game.name}</div>
+                                            <div className="minigame-desc">{game.desc}</div>
+                                        </div>
+                                        <div className={`minigame-difficulty ${game.difficulty === 'ง่าย' ? 'easy' : 'med'}`}>
+                                            {game.difficulty}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div className={`minigame-difficulty ${game.difficulty === 'ง่าย' ? 'easy' : 'med'}`}>
-                                {game.difficulty}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ) : (
+                            /* Render Games */
+                            minigameActive.id === 'symbol_matcher' ? (
+                                <SymbolMatcher onComplete={handleGameComplete} />
+                            ) : minigameActive.id === 'element_memory' ? (
+                                <ElementMemory onComplete={handleGameComplete} />
+                            ) : minigameActive.id === 'atomic_sorter' ? (
+                                <AtomicSorter onComplete={handleGameComplete} />
+                            ) : minigameActive.id === 'element_catcher' ? (
+                                <ElementCatcher onComplete={handleGameComplete} />
+                            ) : minigameActive.id === 'liquid_mixer' ? (
+                                <LiquidMixer onComplete={handleGameComplete} />
+                            ) : (
+                                <div style={{padding: '40px', textAlign: 'center', color: '#666'}}>
+                                    การทดสอบนี้ยังไม่พร้อมใช้งาน...
+                                    <br />
+                                    <button className="mg-btn primary" style={{marginTop: '20px'}} onClick={() => setMinigameActive({id: 'menu'})}>กลับหน้าหลัก</button>
+                                </div>
+                            )
+                        )}
+                    </div>
 
-                <div className="minigame-footer">
-                    ✦ "ผู้ที่พิสูจน์ตนได้เท่านั้น จึงคู่ควรแก่ความรู้แห่งธาตุ" — เอลิมา
+                    <div className="minigame-footer">
+                        ✦ "ผู้ที่พิสูจน์ตนได้เท่านั้น จึงคู่ควรแก่ความรู้แห่งธาตุ" — เอลิมา
+                    </div>
                 </div>
             </div>
 
-            <style jsx>{`
+            <style>{`
                 .minigame-overlay-container {
                     position: fixed;
                     top: 0;
                     left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.85);
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0, 5, 15, 0.7);
                     display: flex;
                     justify-content: center;
                     align-items: center;
                     z-index: 2000;
-                    backdrop-filter: blur(8px);
+                    animation: fadeIn 0.3s ease-out;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                .minigame-window-frame {
+                    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                    border: 2px solid rgba(0, 242, 255, 0.5);
+                    border-radius: 20px;
+                    padding: 6px;
+                    box-shadow: 
+                        0 30px 60px rgba(0, 0, 0, 0.8),
+                        0 0 40px rgba(0, 242, 255, 0.2);
+                    position: relative;
+                    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+
+                @keyframes popIn {
+                    from { transform: scale(0.8) translateY(20px); opacity: 0; }
+                    to { transform: scale(1) translateY(0); opacity: 1; }
                 }
 
                 .minigame-menu-card {
-                    background: #1a1a2e;
-                    border: 2px solid #00f2ff;
-                    border-radius: 12px;
-                    width: 500px;
-                    max-width: 90%;
+                    background: #0a0a1a;
+                    border-radius: 16px;
+                    width: 580px;
+                    max-width: 95vw;
+                    min-height: 480px;
                     padding: 24px;
-                    box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
                     color: #fff;
                     font-family: 'Mitr', sans-serif;
+                    display: flex;
+                    flex-direction: column;
                 }
 
                 .minigame-menu-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 24px;
-                    border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+                    margin-bottom: 20px;
+                    border-bottom: 1px solid rgba(0, 242, 255, 0.15);
                     padding-bottom: 12px;
                 }
 
                 .minigame-menu-header h2 {
                     margin: 0;
-                    font-size: 1.4rem;
+                    font-size: 1rem;
                     color: #00f2ff;
                     text-transform: uppercase;
-                    letter-spacing: 1px;
+                    letter-spacing: 2px;
+                    font-weight: 500;
                 }
 
+                .minigame-content {
+                    flex: 1;
+                    max-height: 60vh;
+                    overflow-y: auto;
+                    margin-bottom: 16px;
+                    scrollbar-width: thin;
+                    scrollbar-color: #00f2ff transparent;
+                }
+
+                /* Custom scrollbar for chrome/safari */
+                .minigame-content::-webkit-scrollbar { width: 4px; }
+                .minigame-content::-webkit-scrollbar-thumb { background: #00f2ff; border-radius: 10px; }
+
                 .close-btn {
-                    background: none;
-                    border: none;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                     color: #fff;
-                    font-size: 2rem;
+                    font-size: 1.2rem;
+                    width: 32px; height: 32px;
+                    border-radius: 50%;
                     cursor: pointer;
-                    line-height: 1;
+                    display: flex; justify-content: center; align-items: center;
+                    transition: all 0.3s;
+                }
+
+                .close-btn:hover {
+                    background: #ef4444;
+                    border-color: #ef4444;
+                    transform: rotate(90deg);
                 }
 
                 .minigame-list {
@@ -134,16 +192,16 @@ export default function MinigameOverlay() {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    background: rgba(255, 255, 255, 0.05);
-                    padding: 16px;
-                    border-radius: 8px;
-                    border: 1px solid transparent;
-                    transition: all 0.2s;
+                    background: rgba(0, 242, 255, 0.03);
+                    padding: 18px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(0, 242, 255, 0.1);
+                    transition: all 0.3s;
                     cursor: pointer;
                 }
 
                 .minigame-item:hover {
-                    background: rgba(0, 242, 255, 0.1);
+                    background: rgba(0, 242, 255, 0.08);
                     border-color: #00f2ff;
                     transform: translateX(5px);
                 }
@@ -151,37 +209,49 @@ export default function MinigameOverlay() {
                 .minigame-name {
                     font-weight: bold;
                     font-size: 1.1rem;
-                    color: #fff;
+                    color: #e2e8f0;
                 }
 
                 .minigame-desc {
-                    font-size: 0.9rem;
-                    color: #aaa;
+                    font-size: 0.85rem;
+                    color: #94a3b8;
                     margin-top: 4px;
                 }
 
                 .minigame-difficulty {
-                    font-size: 0.8rem;
-                    padding: 4px 10px;
-                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    padding: 4px 12px;
+                    border-radius: 6px;
                     font-weight: bold;
                 }
 
                 .minigame-difficulty.easy {
-                    background: #2e7d32;
-                    color: #fff;
+                    background: rgba(34, 197, 94, 0.2);
+                    color: #4ade80;
                 }
 
                 .minigame-difficulty.med {
-                    background: #f57c00;
-                    color: #fff;
+                    background: rgba(245, 158, 11, 0.2);
+                    color: #fbbf24;
                 }
 
                 .minigame-footer {
-                    margin-top: 24px;
+                    margin-top: auto;
                     text-align: center;
-                    font-size: 0.8rem;
-                    color: #666;
+                    font-size: 0.7rem;
+                    color: #475569;
+                    padding-top: 16px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                .mg-btn.primary {
+                    background: #00f2ff;
+                    color: #000;
+                    border: none;
+                    padding: 8px 20px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    cursor: pointer;
                 }
             `}</style>
         </div>
