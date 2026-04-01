@@ -11,6 +11,8 @@ import {
   matchRecipe,
   calculateQTEResult
 } from './battleLogic';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 // ==========================================
 // 🎬 MAIN BATTLE COMPONENT
@@ -74,28 +76,13 @@ export default function BattleScene({ onQuitBattle }) {
   }, [questState]);
 
   const addLog = useCallback((msg) => setLogs(prev => [msg, ...prev].slice(0, 5)), []);
-  const completeActiveQuest = useCallback(async () => {
-    const questId = questIdRef.current;
-    if (!questId || !activeBoss || questCompletionHandledRef.current) return;
-
-    questCompletionHandledRef.current = true;
-
-    try {
-      const nextQuestState = await completeQuest(questId, activeBoss.id);
-      setQuestState(nextQuestState);
-    } catch (error) {
-      console.error('[CHEMMA] Failed to complete quest:', error);
+  const endGame = useCallback((isWin, reason) => { 
+    setPhase(5); 
+    addLog(reason); 
+    if (isWin) {
+      eventBus.emit(EVENTS.BATTLE_WON);
     }
-  }, [activeBoss, setQuestState]);
-
-  const endGame = useCallback((isWin, reason) => {
-    setPhase(5);
-    addLog(reason);
-
-    if (isWin && questMode) {
-      void completeActiveQuest();
-    }
-  }, [addLog, completeActiveQuest, questMode]);
+  }, [addLog]);
 
   const startQuest = (bossId) => {
     const target = BOSS_DATABASE[bossId];

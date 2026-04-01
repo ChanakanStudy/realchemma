@@ -201,7 +201,7 @@ html {
     font-weight: 900;
     border-radius: 4px;
     border: 2px solid #111;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.8);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     letter-spacing: 1px;
     z-index: 2;
 }
@@ -225,7 +225,7 @@ html {
     font-size: 1.3rem;
     font-weight: 800;
     letter-spacing: 2px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
     margin-bottom: 4px;
     line-height: 1;
 }
@@ -244,13 +244,15 @@ html {
 
 .hud-bar-bg {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: #000;
     border: 1px solid #333;
     transform: skewX(-20deg);
     overflow: hidden;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,1);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 1);
 }
 
 .hud-hp-fill {
@@ -269,18 +271,48 @@ html {
     transition: width 0.3s ease;
 }
 
+.hud-exp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #d97706, #fbbf24);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+    position: relative;
+    transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.exp-bg {
+    background: rgba(251, 191, 36, 0.1) !important;
+    border: 1px solid rgba(251, 191, 36, 0.3) !important;
+}
+
+.exp-text {
+    color: #fbbf24 !important;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 1) !important;
+}
+
 .hud-bar-glow {
     position: absolute;
-    top: 0; right: 0;
-    width: 20px; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
     animation: bar-glow-anim 2s infinite linear;
 }
 
 @keyframes bar-glow-anim {
-    0% { transform: translateX(-100px); opacity: 0; }
-    50% { opacity: 1; }
-    100% { transform: translateX(250px); opacity: 0; }
+    0% {
+        transform: translateX(-100px);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(250px);
+        opacity: 0;
+    }
 }
 
 .hud-bar-text {
@@ -290,7 +322,7 @@ html {
     transform: translateY(-50%);
     color: white;
     font-weight: 900;
-    font-family: 'jetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
@@ -363,7 +395,7 @@ html {
     font-weight: bold;
     color: #ffd700;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    font-family: 'jetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 /* --- Minimap/Radar Style --- */
@@ -388,13 +420,13 @@ html {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .minimap-label {
     position: absolute;
     bottom: -15px;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0, 0, 0, 0.8);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 10px;
@@ -616,7 +648,7 @@ html {
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -915,44 +947,6 @@ html {
     font-style: italic;
     color: #9cb2ab;
     animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 0.5;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0.5;
-    }
-}
-
-/* Battle Font Classes */
-.font-epic {
-    font-family: 'Press Start 2P', cursive;
-}
-
-.font-hud {
-    font-family: 'VT323', monospace;
-}
-
-/* Custom scrollbar for inventory */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 12px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #1e293b;
-    border: 2px solid #0f172a;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #64748b;
-    border: 2px solid #0f172a;
 }
 
 /* --- Periodic Table Codex Styles --- */
@@ -1727,20 +1721,7 @@ sub {
     transition: color 0.3s ease;
 }
 
-.item-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
+
 
 .item-glow {
     position: absolute;

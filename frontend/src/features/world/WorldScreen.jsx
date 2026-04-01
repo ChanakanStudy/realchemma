@@ -3,15 +3,18 @@ import { useGameContext } from '../../core/GameContext';
 import { useAuth } from '../../core/AuthContext';
 import { MAX_PLAYER_HP } from '../../core/constants';
 
-export default function WorldScreen() {
+export default function WorldScreen({ userData }) {
     const { playerHP } = useGameContext();
     const { currentPlayer } = useAuth();
 
-    // Calculate HP/MP percentage for the HUD bars
+    // Calculate percentages for the HUD bars
     const hpPercent = Math.max(0, Math.min(100, (playerHP / MAX_PLAYER_HP) * 100));
+    const mpPercent = 100; // Static for now
     
-    // For now, MP is static at 100% until we have a mana system
-    const mpPercent = 100;
+    // Calculate EXP percentage from persistent userData
+    const exp = userData?.xp || 0;
+    const nextLevelXP = userData?.nextLevelXP || 100;
+    const expPercent = Math.max(0, Math.min(100, (exp / nextLevelXP) * 100));
 
     return (
         <div id="gameHUD" style={{ display: 'block' }}>
@@ -25,7 +28,7 @@ export default function WorldScreen() {
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                         />
                     </div>
-                    <div className="hud-level-badge">LV.{currentPlayer?.level || 1}</div>
+                    <div className="hud-level-badge">LV.{userData?.level || 1}</div>
                 </div>
                 
                 <div className="hud-stats-container">
@@ -48,6 +51,16 @@ export default function WorldScreen() {
                                 </div>
                             </div>
                             <span className="hud-bar-text">MP {mpPercent}%</span>
+                        </div>
+
+                        {/* --- NEW EXP BAR --- */}
+                        <div className="hud-bar-wrapper">
+                            <div className="hud-bar-bg exp-bg">
+                                <div className="hud-exp-fill" style={{ width: `${expPercent}%` }}>
+                                    <div className="hud-bar-glow"></div>
+                                </div>
+                            </div>
+                            <span className="hud-bar-text exp-text">EXP {exp}/{nextLevelXP}</span>
                         </div>
                     </div>
                 </div>

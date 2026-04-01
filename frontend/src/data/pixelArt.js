@@ -218,6 +218,24 @@ export const ART_DATA = {
         "00KRRRRRRRRRRK00", "000KRRRRRRRRK000", "000KRRRgRRRRK000", "000KRRgggRRRK000",
         "0000KggggggK0000", "0000KgK00KgK0000", "0000KkkKKkkK0000", "0000KKK00KKK0000"
     ],
+    professor: [
+        "000000KKKK000000",
+        "00000KhhhhK00000",
+        "0000KhhhhhhK0000",
+        "000KssssssssK000",
+        "000KsKwwKwwKsK00", // Glasses
+        "000KsKw0Kw0KsK00", 
+        "000KssssssssK000",
+        "0000KssZZssK0000",
+        "00000KssssK00000",
+        "0000KKwwwwKK0000", // White Lab Coat
+        "000KwwwwwwwwK000",
+        "000KwwKppKwwK000",
+        "000KwwwwwwwwK000",
+        "0000KppKKppK0000",
+        "0000KkkKKkkK0000",
+        "0000KKK00KKK0000"
+    ],
     crystal: [
         "0000440000", "0004444000", "0044444400", "0444444440", "0044444400", "0004444000", "0000440000"
     ],
@@ -299,5 +317,95 @@ export const ART_DATA = {
         "000000000D0F0000000000",
         "000000000F0F0000000000",
         "00000000FFF00000000000"
+    ],
+    lab_table: [
+        "0000000000000000",
+        "0000000000000000",
+        "00yyyy0000000000", // Beaker with yellow liquid
+        "00yyyy00000rr000", // Beaker + Burner (red)
+        "00yyyy00000rr000",
+        "00000000000rr000",
+        "CCCCCCCCCCCCCCCC", // Table Surface
+        "CCkkcccccccckkCC",
+        "CkkkkkkkkkkkkkkC",
+        "CkkkkkkkkkkkkkkC",
+        "CCkkkkkkkkkkkkCC",
+        "0CkkkkkkkkkkkkC0",
+        "0Ckk00000000kkC0",
+        "0Ckk00000000kkC0",
+        "0Ckk00000000kkC0",
+        "0CCK00000000KCC0"
+    ],
+    lab_shelf: [
+        "CCCCCCCCCCCCCCCC",
+        "Crr00yy00000000C", // Flasks on top
+        "Crr00yy000ff000C",
+        "Crr00yy000ff000C",
+        "C000000000ff000C",
+        "CCCCCCCCCCCCCCCC", // Shelf 1
+        "C000pp000000000C",
+        "C000pp000qqqq00C",
+        "C000pp000qqqq00C",
+        "C000pp000qqqq00C",
+        "CCCCCCCCCCCCCCCC", // Shelf 2
+        "Cnn000000000000C",
+        "Cnn0000kkkkkk00C",
+        "Cnn0000kkkkkk00C",
+        "Cnn0000kkkkkk00C",
+        "CCCCCCCCCCCCCCCC"  // Bottom
+    ],
+    t_lab_floor: [
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "wwwwwwwwwwwwwwcw",
+        "cccccccccccccccc",
+        "wwwwwwwwwwwwwwcw"
+    ],
+    lab_wall: [
+        "CCCCCCCCCCCCCCCC",
+        "CooooooooooooooC", // Cyan LED strip
+        "CooooooooooooooC",
+        "CCCCCCCCCCCCCCCC",
+        "CGGGGGGGGGGGGGGC",
+        "CGGGGGGGGGGGGGGC",
+        "CGGGGGGGGGGGGGGC",
+        "CCCCCCCCCCCCCCCC",
+        "CGGGGGGGGGGGGGGC",
+        "CGGGGGGGGGGGGGGC",
+        "CGGGGGGGGGGGGGGC",
+        "CCCCCCCCCCCCCCCC",
+        "CGGGGGGGGGGGGGGC",
+        "CGGGGGGGGGGGGGGC",
+        "CGGGGGGGGGGGGGGC",
+        "CCCCCCCCCCCCCCCC"
+    ],
+    lab_door: [
+        "CCCCCCCCCCCCCCCC",
+        "CCooooooooooooCC",
+        "CooCCCCCCCCCCooC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC",
+        "CoC0000000000CoC"
     ]
 };

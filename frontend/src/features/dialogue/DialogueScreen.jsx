@@ -34,20 +34,16 @@ export default function DialogueScreen() {
     };
 
     const handleChoice = (choiceId) => {
-        if (battleNpc && choiceId === 'fight') {
-            setNpcDialogue(null);
-            setGameState(GAME_STATES.BATTLE);
-            return;
-        }
-
-        if (questNpc && choiceId === 'quest_brief') {
-            void acceptQuestAndClose();
-            return;
-        }
-
-        if (choiceId === 'leave') {
-            setNpcDialogue(null);
-            setGameState(GAME_STATES.GAME);
+        if (choiceId === 'fight') {
+            eventBus.emit(EVENTS.START_BATTLE);
+        } else if (choiceId === 'leave') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+        } else if (choiceId === 'accept_quest' && npcDialogue.questData) {
+            eventBus.emit(EVENTS.QUEST_ACCEPTED, npcDialogue.questData);
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+        } else if (choiceId === 'complete_quest' && npcDialogue.rewardData) {
+            eventBus.emit(EVENTS.QUEST_COMPLETED, npcDialogue.rewardData);
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
         }
     };
 
