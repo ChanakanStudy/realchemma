@@ -27,6 +27,7 @@ class UserQuestProgress(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_uuid = Column(String(36), nullable=True, index=True)
     quest_id = Column(String, ForeignKey("quest_definitions.id", ondelete="CASCADE"), nullable=False, index=True)
     status = Column(String, nullable=False, default="locked", index=True)
     started_at = Column(DateTime, nullable=True)
@@ -34,5 +35,5 @@ class UserQuestProgress(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     __table_args__ = (
-        UniqueConstraint("user_id", "quest_id", name="uq_user_quest_progress"),
+        UniqueConstraint("user_uuid", "quest_id", name="uq_user_quest_progress_uuid"),
     )

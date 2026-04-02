@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from uuid import uuid4
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -9,6 +10,19 @@ from app.features.auth.schemas import UserRegister, UserLogin, TokenResponse
 
 router = APIRouter()
 
+
+def _serialize_user(user: User):
+    return {
+        "id": user.uuid,
+        "legacy_id": user.id,
+        "uuid": user.uuid,
+        "username": user.username,
+        "email": user.email,
+        "name": user.name,
+        "picture_url": user.picture_url,
+        "chem_coin": user.chem_coin,
+    }
+
 @router.post("/register")
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     db_user = db.query(User).filter((User.username == user_data.username) | (User.email == user_data.email)).first()
@@ -17,25 +31,22 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         
     hashed_password = get_password_hash(user_data.password)
     new_user = User(
+        uuid=str(uuid4()),
         username=user_data.username,
         email=user_data.email,
         hashed_password=hashed_password,
-        name=user_data.username
+        name=user_data.username,
+        chem_coin=0,
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     
-    access_token = create_access_token(data={"sub": str(new_user.id), "username": new_user.username})
+    access_token = create_access_token(data={"sub": new_user.uuid, "username": new_user.username})
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": {
-            "id": new_user.id,
-            "username": new_user.username,
-            "email": new_user.email,
-            "name": new_user.name
-        }
+        "user": _serialize_user(new_user)
     }
 
 @router.post("/login")
@@ -50,24 +61,13 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     if not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
         
-    access_token = create_access_token(data={"sub": str(user.id), "username": user.username})
+    access_token = create_access_token(data={"sub": user.uuid, "username": user.username})
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "name": user.name
-        }
+        "user": _serialize_user(user)
     }
 
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "name": current_user.name,
-        "email": current_user.email,
-        "picture_url": current_user.picture_url
-    }
+    return _serialize_user(current_user)

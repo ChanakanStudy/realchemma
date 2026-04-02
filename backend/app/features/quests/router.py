@@ -12,14 +12,14 @@ router = APIRouter()
 
 @router.get("/state", response_model=QuestStateResponse)
 async def read_quest_state(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return get_quest_state(db, current_user.id)
+    return get_quest_state(db, current_user.uuid)
 
 
 @router.post("/accept/{quest_id}", response_model=QuestStateResponse)
 async def accept_quest_for_user(quest_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return accept_quest(db, current_user.id, quest_id)
+    return accept_quest(db, current_user.uuid, quest_id)
 
 
 @router.post("/complete", response_model=QuestStateResponse)
 async def complete_quest_for_user(payload: QuestCompleteRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return complete_quest(db, current_user.id, payload.quest_id, payload.boss_id)
+    return complete_quest(db, current_user.uuid, payload.quest_id, payload.boss_id)

@@ -18,7 +18,7 @@ class LabRecipeOut(BaseModel):
 
 
 class GameStateResponse(BaseModel):
-    user_id: int
+    user_uuid: str
     inventory: List[InventoryItemOut] = Field(default_factory=list)
     discovered: List[str] = Field(default_factory=list)
     discovered_compounds: List[str] = Field(default_factory=list)
