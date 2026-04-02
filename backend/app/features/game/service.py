@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from app.features.game.schemas import LabExperimentResponse
 from app.models.inventory import UserInventoryItem
 from app.models.game_state import UserGameState
+from app.models.quest import QuestDefinition, UserQuestProgress
+from app.models.user import User
 
 
 DEFAULT_GAME_STATE = {
@@ -77,13 +79,14 @@ def _legacy_inventory_seed(state_row: UserGameState | None):
     return _clone_default_state()["inventory"]
 
 
-def _get_or_create_state_row(db: Session, user_uuid: str):
+def _get_or_create_state_row(db: Session, user_id: int, user_uuid: str):
     row = db.query(UserGameState).filter(UserGameState.user_uuid == user_uuid).first()
     if row:
         return row
 
     initial_state = _clone_default_state()
     row = UserGameState(
+        user_id=user_id,
         user_uuid=user_uuid,
         inventory_json=initial_state["inventory"],
         discovered_json=initial_state["discovered"],
@@ -95,18 +98,42 @@ def _get_or_create_state_row(db: Session, user_uuid: str):
     return row
 
 
-def _get_or_create_inventory_rows(db: Session, user_uuid: str):
+def _get_or_create_inventory_rows(db: Session, user_id: int, user_uuid: str):
     rows = db.query(UserInventoryItem).filter(UserInventoryItem.user_uuid == user_uuid).all()
     if rows:
         return rows
 
-    state_row = _get_or_create_state_row(db, user_uuid)
+    state_row = _get_or_create_state_row(db, user_id, user_uuid)
     seed_inventory = _legacy_inventory_seed(state_row)
     for item in seed_inventory:
-        db.add(UserInventoryItem(user_uuid=user_uuid, item_id=item["id"], quantity=int(item["quantity"])))
+        db.add(UserInventoryItem(user_id=user_id, user_uuid=user_uuid, item_id=item["id"], quantity=int(item["quantity"])))
 
     db.commit()
     return db.query(UserInventoryItem).filter(UserInventoryItem.user_uuid == user_uuid).all()
+
+
+def ensure_user_game_data(db: Session, user: User):
+    state_row = _get_or_create_state_row(db, user.id, user.uuid)
+    inventory_rows = _get_or_create_inventory_rows(db, user.id, user.uuid)
+
+    quest_rows = db.query(UserQuestProgress).filter(UserQuestProgress.user_uuid == user.uuid).all()
+    if not quest_rows:
+        quest_definitions = db.query(QuestDefinition).order_by(QuestDefinition.order_index.asc()).all()
+        for index, definition in enumerate(quest_definitions):
+            db.add(
+                UserQuestProgress(
+                    user_id=user.id,
+                    user_uuid=user.uuid,
+                    quest_id=definition.id,
+                    status="available" if index == 0 else "locked",
+                )
+            )
+        db.commit()
+
+    return {
+        "state_row": state_row,
+        "inventory_rows": inventory_rows,
+    }
 
 
 def _serialize_inventory(rows):
@@ -117,14 +144,14 @@ def _serialize_inventory(rows):
     ]
 
 
-def _sync_legacy_inventory_snapshot(db: Session, user_uuid: str, inventory):
-    state_row = _get_or_create_state_row(db, user_uuid)
+def _sync_legacy_inventory_snapshot(db: Session, user_id: int, user_uuid: str, inventory):
+    state_row = _get_or_create_state_row(db, user_id, user_uuid)
     state_row.inventory_json = inventory
     db.commit()
     db.refresh(state_row)
 
 
-def _apply_inventory_changes(db: Session, user_uuid: str, changes):
+def _apply_inventory_changes(db: Session, user_id: int, user_uuid: str, changes):
     if not isinstance(changes, list):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid inventory changes payload")
 
@@ -140,9 +167,9 @@ def _apply_inventory_changes(db: Session, user_uuid: str, changes):
         normalized_changes[item_id] += quantity
 
     if not normalized_changes:
-        return get_game_state(db, user_uuid)
+        return get_game_state(db, user_id, user_uuid)
 
-    rows = {row.item_id: row for row in _get_or_create_inventory_rows(db, user_uuid)}
+    rows = {row.item_id: row for row in _get_or_create_inventory_rows(db, user_id, user_uuid)}
 
     for item_id, delta in normalized_changes.items():
         current_quantity = rows.get(item_id).quantity if item_id in rows else 0
@@ -162,16 +189,16 @@ def _apply_inventory_changes(db: Session, user_uuid: str, changes):
         if row:
             row.quantity = next_quantity
         else:
-            db.add(UserInventoryItem(user_uuid=user_uuid, item_id=item_id, quantity=next_quantity))
+            db.add(UserInventoryItem(user_id=user_id, user_uuid=user_uuid, item_id=item_id, quantity=next_quantity))
 
     db.commit()
-    inventory_rows = _get_or_create_inventory_rows(db, user_uuid)
+    inventory_rows = _get_or_create_inventory_rows(db, user_id, user_uuid)
     inventory = _serialize_inventory(inventory_rows)
-    _sync_legacy_inventory_snapshot(db, user_uuid, inventory)
+    _sync_legacy_inventory_snapshot(db, user_id, user_uuid, inventory)
     return _state_payload(user_uuid, {
         "inventory": inventory,
-        "discovered": _get_or_create_state_row(db, user_uuid).discovered_json,
-        "discovered_compounds": _get_or_create_state_row(db, user_uuid).discovered_compounds_json,
+        "discovered": _get_or_create_state_row(db, user_id, user_uuid).discovered_json,
+        "discovered_compounds": _get_or_create_state_row(db, user_id, user_uuid).discovered_compounds_json,
     })
 
 
@@ -183,15 +210,15 @@ def _save_state_row(db: Session, row: UserGameState, state: dict):
     db.refresh(row)
 
 
-def get_game_state(db: Session, user_uuid: str):
-    row = _get_or_create_state_row(db, user_uuid)
-    inventory_rows = _get_or_create_inventory_rows(db, user_uuid)
+def get_game_state(db: Session, user_id: int, user_uuid: str):
+    row = _get_or_create_state_row(db, user_id, user_uuid)
+    inventory_rows = _get_or_create_inventory_rows(db, user_id, user_uuid)
     state = _normalize_game_state({
         "inventory": _serialize_inventory(inventory_rows),
         "discovered": row.discovered_json,
         "discovered_compounds": row.discovered_compounds_json,
     })
-    _sync_legacy_inventory_snapshot(db, user_uuid, state["inventory"])
+    _sync_legacy_inventory_snapshot(db, user_id, user_uuid, state["inventory"])
     return _state_payload(user_uuid, state)
 
 
@@ -236,14 +263,14 @@ def _match_recipe(selected_symbols):
     return None
 
 
-def run_experiment(db: Session, user_uuid: str, selected_symbols):
+def run_experiment(db: Session, user_id: int, user_uuid: str, selected_symbols):
     if not isinstance(selected_symbols, list) or len(selected_symbols) < 2:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ต้องมีสารอย่างน้อย 2 ชนิดเพื่อเริ่มปฏิกิริยา")
 
-    row = _get_or_create_state_row(db, user_uuid)
-    _get_or_create_inventory_rows(db, user_uuid)
+    row = _get_or_create_state_row(db, user_id, user_uuid)
+    _get_or_create_inventory_rows(db, user_id, user_uuid)
     state = _normalize_game_state({
-        "inventory": _serialize_inventory(_get_or_create_inventory_rows(db, user_uuid)),
+        "inventory": _serialize_inventory(_get_or_create_inventory_rows(db, user_id, user_uuid)),
         "discovered": row.discovered_json,
         "discovered_compounds": row.discovered_compounds_json,
     })
@@ -273,21 +300,21 @@ def run_experiment(db: Session, user_uuid: str, selected_symbols):
     _save_state_row(db, row, next_state)
 
     inventory_rows = {item["id"]: item["quantity"] for item in next_inventory}
-    existing_rows = {row.item_id: row for row in _get_or_create_inventory_rows(db, user_uuid)}
+    existing_rows = {row.item_id: row for row in _get_or_create_inventory_rows(db, user_id, user_uuid)}
 
     for item_id, quantity in inventory_rows.items():
         row_item = existing_rows.get(item_id)
         if row_item:
             row_item.quantity = quantity
         else:
-            db.add(UserInventoryItem(user_uuid=user_uuid, item_id=item_id, quantity=quantity))
+            db.add(UserInventoryItem(user_id=user_id, user_uuid=user_uuid, item_id=item_id, quantity=quantity))
 
     for item_id, row_item in existing_rows.items():
         if item_id not in inventory_rows:
             db.delete(row_item)
 
     db.commit()
-    _sync_legacy_inventory_snapshot(db, user_uuid, next_inventory)
+    _sync_legacy_inventory_snapshot(db, user_id, user_uuid, next_inventory)
 
     payload = _state_payload(user_uuid, next_state)
     return LabExperimentResponse(
@@ -305,5 +332,5 @@ def run_experiment(db: Session, user_uuid: str, selected_symbols):
     )
 
 
-def adjust_inventory(db: Session, user_uuid: str, changes):
-    return _apply_inventory_changes(db, user_uuid, changes)
+def adjust_inventory(db: Session, user_id: int, user_uuid: str, changes):
+    return _apply_inventory_changes(db, user_id, user_uuid, changes)

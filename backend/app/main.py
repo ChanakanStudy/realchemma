@@ -25,6 +25,21 @@ from app.models.quest import QuestDefinition, UserQuestProgress
 from app.models.user import User
 
 
+DEFAULT_INVENTORY_ITEMS = [
+    {"id": "H", "quantity": 10},
+    {"id": "O", "quantity": 10},
+    {"id": "Na", "quantity": 10},
+    {"id": "Cl", "quantity": 10},
+    {"id": "C", "quantity": 10},
+    {"id": "H2O", "quantity": 3},
+    {"id": "NaCl", "quantity": 2},
+]
+
+
+DEFAULT_DISCOVERED = ["H", "He", "Li", "Be", "B", "C", "N", "O", "Fe", "Au", "Ag", "Cu", "Hg", "Pb", "Ne"]
+DEFAULT_DISCOVERED_COMPOUNDS = ["H2O", "NaCl"]
+
+
 def _ensure_user_columns(db):
     inspector = inspect(db.bind)
     columns = {column["name"] for column in inspector.get_columns("users")}
@@ -88,6 +103,52 @@ def _ensure_uuid_unique_indexes(db):
     db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_user_quest_progress_user_uuid_quest_id ON user_quest_progress (user_uuid, quest_id)"))
     db.commit()
 
+
+def _seed_user_game_data(db):
+    users = db.query(User).all()
+    if not users:
+        return
+
+    quest_definitions = db.query(QuestDefinition).order_by(QuestDefinition.order_index.asc()).all()
+
+    for user in users:
+        state_row = db.query(UserGameState).filter(UserGameState.user_uuid == user.uuid).first()
+        if not state_row:
+            state_row = UserGameState(
+                user_id=user.id,
+                user_uuid=user.uuid,
+                inventory_json=DEFAULT_INVENTORY_ITEMS,
+                discovered_json=DEFAULT_DISCOVERED,
+                discovered_compounds_json=DEFAULT_DISCOVERED_COMPOUNDS,
+            )
+            db.add(state_row)
+            db.commit()
+            db.refresh(state_row)
+
+        inventory_rows = db.query(UserInventoryItem).filter(UserInventoryItem.user_uuid == user.uuid).all()
+        if not inventory_rows:
+            seed_inventory = state_row.inventory_json if isinstance(state_row.inventory_json, list) and state_row.inventory_json else DEFAULT_INVENTORY_ITEMS
+            for item in seed_inventory:
+                item_id = item.get("id")
+                quantity = int(item.get("quantity", 0))
+                if not item_id or quantity <= 0:
+                    continue
+                db.add(UserInventoryItem(user_id=user.id, user_uuid=user.uuid, item_id=item_id, quantity=quantity))
+            db.commit()
+
+        quest_rows = db.query(UserQuestProgress).filter(UserQuestProgress.user_uuid == user.uuid).all()
+        if not quest_rows and quest_definitions:
+            for index, definition in enumerate(quest_definitions):
+                db.add(
+                    UserQuestProgress(
+                        user_id=user.id,
+                        user_uuid=user.uuid,
+                        quest_id=definition.id,
+                        status="available" if index == 0 else "locked",
+                    )
+                )
+            db.commit()
+
 # Function to wait for database to be ready
 def wait_for_database(max_retries=30, delay=1):
     for attempt in range(max_retries):
@@ -118,6 +179,7 @@ if wait_for_database():
             _ensure_uuid_relation_column(db, "user_game_states")
             _ensure_uuid_relation_column(db, "user_quest_progress")
             _ensure_uuid_unique_indexes(db)
+            _seed_user_game_data(db)
         logger.info("✅ Database tables created successfully")
     except Exception as e:
         logger.error(f"❌ Table creation failed: {str(e)}")

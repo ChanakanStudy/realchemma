@@ -20,8 +20,12 @@ import { EVENTS } from './core/constants';
 // Dashboard Imports
 import InventoryUI from './api/components/inventory/InventoryUI';
 import {
+  createDefaultGameState,
   loadGameState,
   saveGameState,
+  clearPendingInventorySync,
+  loadPendingInventorySync,
+  queuePendingInventorySync,
   addXP,
   addInventoryItem,
   acceptQuest,
@@ -36,12 +40,17 @@ function GameContent() {
 
   // Local Dashboard state moved to GameContext
   const [activeTab, setActiveTab] = useState('backpack');
-  const [userData, setUserData] = useState(loadGameState());
+  const [userData, setUserData] = useState(() => createDefaultGameState());
   const [labOpen, setLabOpen] = useState(false);
+
+  useEffect(() => {
+    window.chemmaUserData = userData;
+  }, [userData]);
 
   useEffect(() => {
     if (!currentPlayer) {
       setQuestState(null);
+      setUserData(createDefaultGameState());
       return;
     }
 
@@ -86,8 +95,34 @@ function GameContent() {
           saveGameState(next);
           return next;
         });
+
+        const pendingInventoryChanges = loadPendingInventorySync();
+        if (pendingInventoryChanges.length > 0) {
+          try {
+            const syncedState = await adjustInventory(pendingInventoryChanges);
+            if (cancelled) return;
+
+            setUserData(prev => ({
+              ...prev,
+              inventory: syncedState.inventory,
+              discovered: syncedState.discovered ?? prev.discovered,
+              discoveredCompounds: syncedState.discovered_compounds ?? prev.discoveredCompounds,
+            }));
+            clearPendingInventorySync();
+          } catch (syncError) {
+            console.error('[CHEMMA] Failed to flush pending inventory sync:', syncError);
+          }
+        }
       } catch (error) {
         console.error('[CHEMMA] Failed to load game state:', error);
+        if (!cancelled) {
+          const fallbackState = loadGameState();
+          setUserData(prev => ({
+            ...createDefaultGameState(),
+            ...prev,
+            ...fallbackState,
+          }));
+        }
       }
     };
 
@@ -220,6 +255,7 @@ function GameContent() {
                   next = addInventoryItem(next, item.id, item.qty);
                 });
                 saveGameState(next);
+                queuePendingInventorySync(data.items.map(item => ({ id: item.id, quantity: item.qty })));
                 return next;
               });
             }

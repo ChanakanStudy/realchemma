@@ -7,6 +7,7 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.core.security import create_access_token, verify_password, get_password_hash
 from app.features.auth.schemas import UserRegister, UserLogin, TokenResponse
+from app.features.game.service import ensure_user_game_data
 
 router = APIRouter()
 
@@ -41,6 +42,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    ensure_user_game_data(db, new_user)
     
     access_token = create_access_token(data={"sub": new_user.uuid, "username": new_user.username})
     return {
@@ -60,6 +62,8 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         
     if not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    ensure_user_game_data(db, user)
         
     access_token = create_access_token(data={"sub": user.uuid, "username": user.username})
     return {
