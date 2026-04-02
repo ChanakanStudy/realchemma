@@ -37,13 +37,14 @@ export const loadGameState = () => {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             const parsed = JSON.parse(saved);
-            // FOR PRESENTATION: We override inventory and discovered to ensure they match our code
-            return { 
-                ...DEFAULT_STATE, 
-                ...parsed, 
-                inventory: DEFAULT_STATE.inventory,
-                discovered: DEFAULT_STATE.discovered,
-                discoveredCompounds: DEFAULT_STATE.discoveredCompounds || ['H2O', 'NaCl']
+            return {
+                ...DEFAULT_STATE,
+                ...parsed,
+                inventory: Array.isArray(parsed.inventory) ? parsed.inventory : DEFAULT_STATE.inventory,
+                discovered: Array.isArray(parsed.discovered) ? parsed.discovered : DEFAULT_STATE.discovered,
+                discoveredCompounds: Array.isArray(parsed.discoveredCompounds)
+                    ? parsed.discoveredCompounds
+                    : DEFAULT_STATE.discoveredCompounds,
             };
         }
     } catch (e) {

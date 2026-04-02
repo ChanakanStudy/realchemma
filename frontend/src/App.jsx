@@ -18,7 +18,7 @@ import { eventBus } from './core/EventBus';
 import { EVENTS } from './core/constants';
 
 // Dashboard Imports
-import InventoryUI from './components/inventory/InventoryUI';
+import InventoryUI from './api/components/inventory/InventoryUI';
 import {
   loadGameState,
   saveGameState,
@@ -27,7 +27,7 @@ import {
   acceptQuest,
   completeQuest
 } from './core/userState';
-import { getQuestState } from './api/client';
+import { adjustInventory, getGameState, getQuestState } from './api/client';
 
 function GameContent() {
   const { gameState, setGameState, showDashboard, setShowDashboard, chatOpen, setChatOpen, questState, setQuestState } = useGameContext();
@@ -66,6 +66,32 @@ function GameContent() {
     };
 
     syncQuestState();
+
+    const syncGameState = async () => {
+      try {
+        const serverGameState = await getGameState();
+        if (cancelled) return;
+
+        setUserData(prev => {
+          const normalizedGameState = {
+            ...serverGameState,
+            discoveredCompounds: serverGameState.discovered_compounds ?? prev.discoveredCompounds,
+          };
+          delete normalizedGameState.discovered_compounds;
+
+          const next = {
+            ...prev,
+            ...normalizedGameState,
+          };
+          saveGameState(next);
+          return next;
+        });
+      } catch (error) {
+        console.error('[CHEMMA] Failed to load game state:', error);
+      }
+    };
+
+    syncGameState();
 
     return () => {
       cancelled = true;
@@ -118,9 +144,6 @@ function GameContent() {
         const nextState = !showDashboard;
         console.log(`[CHEMMA] Toggling Dashboard to: ${nextState}`);
         setShowDashboard(nextState);
-        if (nextState) {
-          setUserData(loadGameState());
-        }
         return;
       }
 
@@ -166,13 +189,42 @@ function GameContent() {
           let next = completeQuest(prev, data.id);
           next = addXP(next, data.xp || 0);
           if (data.items) {
-            data.items.forEach(item => {
-              next = addInventoryItem(next, item.id, item.qty);
-            });
+            // Keep UI responsive; the DB-backed grant is handled below.
           }
           saveGameState(next);
           return next;
         });
+
+        if (data.items?.length) {
+          (async () => {
+            try {
+              const serverGameState = await adjustInventory(
+                data.items.map(item => ({ id: item.id, quantity: item.qty }))
+              );
+
+              setUserData(prev => {
+                const next = {
+                  ...prev,
+                  inventory: serverGameState.inventory,
+                  discovered: serverGameState.discovered ?? prev.discovered,
+                  discoveredCompounds: serverGameState.discovered_compounds ?? prev.discoveredCompounds,
+                };
+                saveGameState(next);
+                return next;
+              });
+            } catch (error) {
+              console.error('[CHEMMA] Failed to sync quest rewards to inventory DB:', error);
+              setUserData(prev => {
+                let next = prev;
+                data.items.forEach(item => {
+                  next = addInventoryItem(next, item.id, item.qty);
+                });
+                saveGameState(next);
+                return next;
+              });
+            }
+          })();
+        }
 
         // Visual feedback
         const flash = document.getElementById('flashScreen');

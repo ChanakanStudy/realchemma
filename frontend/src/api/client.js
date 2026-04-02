@@ -142,3 +142,30 @@ export async function completeQuest(questId, bossId) {
     },
   });
 }
+
+export async function getGameState() {
+  return apiRequest('/game/state', {
+    method: 'GET',
+    token: getAccessToken(),
+  });
+}
+
+export async function runLabExperiment(selectedSymbols) {
+  return apiRequest('/game/experiment', {
+    method: 'POST',
+    token: getAccessToken(),
+    body: {
+      selected_symbols: selectedSymbols,
+    },
+  });
+}
+
+export async function adjustInventory(changes) {
+  return apiRequest('/game/inventory/adjust', {
+    method: 'POST',
+    token: getAccessToken(),
+    body: {
+      changes,
+    },
+  });
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PERIODIC_TABLE_DATA, ELEMENT_CATEGORIES } from '../../services/elementData';
+import { PERIODIC_TABLE_DATA, ELEMENT_CATEGORIES } from '../../../services/elementData';
 
 export default function PeriodicTable({ discoveredElements = [], onClose, embedded = false }) {
   const [selected, setSelected] = useState(null);
