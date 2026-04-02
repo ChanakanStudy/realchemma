@@ -81,8 +81,15 @@ export default function BattleScene({ onQuitBattle }) {
     addLog(reason); 
     if (isWin) {
       eventBus.emit(EVENTS.BATTLE_WON);
+      if (questSessionRef.current) {
+        eventBus.emit(EVENTS.QUEST_COMPLETED, {
+          id: questIdRef.current,
+          bossId: activeBossId,
+          xp: questBattle?.reward_xp || 0
+        });
+      }
     }
-  }, [addLog]);
+  }, [addLog, activeBossId, questBattle]);
 
   const startQuest = (bossId) => {
     const target = BOSS_DATABASE[bossId];

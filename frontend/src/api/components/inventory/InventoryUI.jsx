@@ -282,11 +282,11 @@ function QuestsTab({ questState, isLoading, error }) {
 
       <div className="quest-summary-card">
         <div className="quest-summary-row">
-          <span>Active</span>
+          <span>Active : </span>
           <strong>{activeQuest ? activeQuest.title : 'None'}</strong>
         </div>
         <div className="quest-summary-row">
-          <span>Completed</span>
+          <span>Completed : </span>
           <strong>{completedCount} / {quests.length}</strong>
         </div>
       </div>

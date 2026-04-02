@@ -32,7 +32,7 @@ import {
   acceptQuest,
   completeQuest
 } from './core/userState';
-import { adjustInventory, getGameState, getQuestState } from './api/client';
+import { adjustInventory, getGameState, getQuestState, completeQuest as apiCompleteQuest } from './api/client';
 import { calculateMinigameRewards } from './features/minigames/rewardData';
 
 function GameContent() {
@@ -221,7 +221,7 @@ function GameContent() {
         });
       }),
       eventBus.on(EVENTS.QUEST_COMPLETED, (data) => {
-        // data: { id, xp, items: [{id, qty}] }
+        // data: { id, xp, items: [{id, qty}], bossId }
         setUserData(prev => {
           let next = completeQuest(prev, data.id);
           next = addXP(next, data.xp || 0);
@@ -231,6 +231,18 @@ function GameContent() {
           saveGameState(next);
           return next;
         });
+
+        // Background sync to backend
+        (async () => {
+          try {
+            if (data.id && data.bossId) {
+              const newQuestState = await apiCompleteQuest(data.id, data.bossId);
+              setQuestState(newQuestState);
+            }
+          } catch (error) {
+            console.error('[CHEMMA] Failed to complete quest on backend:', error);
+          }
+        })();
 
         if (data.items?.length) {
           (async () => {
