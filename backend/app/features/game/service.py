@@ -37,6 +37,23 @@ RECIPES = [
     {"id": "KCl", "name": "Potassium Salt (KCl)", "formula": {"K": 1, "Cl": 1}, "damage": 60, "status": "Marked", "color": "#fbcfe8", "desc": "เกลือโพแทสเซียม ใช้ในทางการแพทย์เพื่อเพิ่มระดับโพแทสเซียมและในปุ๋ย"},
     {"id": "CH4", "name": "Methane Gas (CH4)", "formula": {"C": 1, "H": 4}, "damage": 30, "status": "Flammable", "color": "#d1d5db", "desc": "แก๊สชีวภาพที่ไวไฟสูงมาก เป็นส่วนประกอบหลักของแก๊สธรรมชาติ"},
     {"id": "CaO", "name": "Quicklime (CaO)", "formula": {"Ca": 1, "O": 1}, "damage": 85, "status": "Burn", "color": "#ffedd5", "desc": "ปูนขาว เมื่อสัมผัสน้ำจะคายความร้อนรุนแรง ใช้ในการปรับสภาพดินและฆ่าเชื้อ"},
+    {"id": "H2O2", "name": "Peroxide Spark (H2O2)", "formula": {"H": 2, "O": 2}, "damage": 55, "status": "Reactive", "color": "#38bdf8", "desc": "ไฮโดรเจนเปอร์ออกไซด์ สารออกซิไดซ์แรง ใช้ในงานฆ่าเชื้อและอุตสาหกรรม"},
+    {"id": "CO", "name": "Silent Poison (CO)", "formula": {"C": 1, "O": 1}, "damage": 35, "status": "Toxin", "color": "#64748b", "desc": "คาร์บอนมอนอกไซด์ แก๊สพิษที่มองไม่เห็นและอันตรายต่อการหายใจ"},
+    {"id": "SO2", "name": "Sulfur Smoke (SO2)", "formula": {"S": 1, "O": 2}, "damage": 45, "status": "Suffocated", "color": "#eab308", "desc": "ซัลเฟอร์ไดออกไซด์ แก๊สฉุนที่ระคายเคืองทางเดินหายใจ"},
+    {"id": "SO3", "name": "Acid Mist (SO3)", "formula": {"S": 1, "O": 3}, "damage": 70, "status": "Corroded", "color": "#f59e0b", "desc": "ซัลเฟอร์ไตรออกไซด์ สารตั้งต้นของกรดกำมะถันและเกิดละอองกัดกร่อน"},
+    {"id": "H2SO4", "name": "Vitriol Core (H2SO4)", "formula": {"H": 2, "S": 1, "O": 4}, "damage": 140, "status": "Corroded", "color": "#7c3aed", "desc": "กรดกำมะถัน เข้มข้นและกัดกร่อนรุนแรง ใช้ในอุตสาหกรรมหนัก"},
+    {"id": "HNO3", "name": "Aqua Fortis (HNO3)", "formula": {"H": 1, "N": 1, "O": 3}, "damage": 130, "status": "Corroded", "color": "#06b6d4", "desc": "กรดไนตริก กรดออกซิไดซ์แรง ใช้ในอุตสาหกรรมและงานสังเคราะห์"},
+    {"id": "NH4Cl", "name": "Sal Ammoniac (NH4Cl)", "formula": {"N": 1, "H": 4, "Cl": 1}, "damage": 45, "status": "Crystalized", "color": "#cbd5e1", "desc": "แอมโมเนียมคลอไรด์ เกลือผลึกที่ใช้ในปฏิกิริยาและงานทดลอง"},
+    {"id": "Na2CO3", "name": "Soda Ash (Na2CO3)", "formula": {"Na": 2, "C": 1, "O": 3}, "damage": 65, "status": "Crystalized", "color": "#f8fafc", "desc": "โซดาแอช ใช้ผลิตแก้ว ทำความสะอาด และปรับสภาพสารละลาย"},
+    {"id": "CaCO3", "name": "Limestone Shard (CaCO3)", "formula": {"Ca": 1, "C": 1, "O": 3}, "damage": 50, "status": "Crystalized", "color": "#e2e8f0", "desc": "แคลเซียมคาร์บอเนต พบในหินปูน เปลือกหอย และวัสดุธรรมชาติ"},
+    {"id": "MgO", "name": "Magnesia Ward (MgO)", "formula": {"Mg": 1, "O": 1}, "damage": 75, "status": "Burn", "color": "#bae6fd", "desc": "แมกนีเซียมออกไซด์ วัสดุทนความร้อนและใช้ในอุตสาหกรรมเซรามิก"},
+    {"id": "Al2O3", "name": "Alumina Shell (Al2O3)", "formula": {"Al": 2, "O": 3}, "damage": 95, "status": "Crystalized", "color": "#dbeafe", "desc": "อะลูมินา วัสดุแข็งทนทาน ใช้ในเซรามิกและสารกัดกร่อน"},
+    {"id": "SiO2", "name": "Quartz Prism (SiO2)", "formula": {"Si": 1, "O": 2}, "damage": 90, "status": "Crystalized", "color": "#67e8f9", "desc": "ซิลิกอนไดออกไซด์ โครงสร้างหลักของควอตซ์และทราย"},
+    {"id": "C2H5OH", "name": "Spirit Flame (C2H5OH)", "formula": {"C": 2, "H": 6, "O": 1}, "damage": 60, "status": "Flammable", "color": "#fb7185", "desc": "เอทานอล ของเหลวไวไฟ ใช้เป็นเชื้อเพลิงและตัวทำละลาย"},
+    {"id": "Fe3O4", "name": "Magnetite Core (Fe3O4)", "formula": {"Fe": 3, "O": 4}, "damage": 125, "status": "Crystalized", "color": "#374151", "desc": "แมกนีไทต์ สนิมชนิดแม่เหล็กที่มีความเสถียรสูง"},
+    {"id": "Ca(OH)2", "name": "Slaked Lime (Ca(OH)2)", "formula": {"Ca": 1, "O": 2, "H": 2}, "damage": 70, "status": "Burn", "color": "#f8fafc", "desc": "ปูนขาวดอง ใช้ปรับสภาพดินและในกระบวนการเคมีหลายชนิด"},
+    {"id": "Na2SO4", "name": "Glauber Salt (Na2SO4)", "formula": {"Na": 2, "S": 1, "O": 4}, "damage": 85, "status": "Crystalized", "color": "#bae6fd", "desc": "โซเดียมซัลเฟต เกลือผลึกที่พบในงานอุตสาหกรรมและการทดลอง"},
+    {"id": "K2SO4", "name": "Potash Bloom (K2SO4)", "formula": {"K": 2, "S": 1, "O": 4}, "damage": 90, "status": "Crystalized", "color": "#f9a8d4", "desc": "โพแทสเซียมซัลเฟต ใช้ในปุ๋ยและสารเคมีเฉพาะทาง"},
 ]
 
 
