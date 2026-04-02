@@ -29,7 +29,7 @@ export const DIFFICULTY_REWARDS = {
         minXP: 180,
         maxXP: 420,
         lootCount: 4,
-        possibleTiers: ['TIER_2', 'TIER_3', 'TIER_4'],
+        possibleTiers: ['TIER_2', 'TIER_3'],
         stardustRange: [40, 100]
     }
 };
@@ -72,9 +72,9 @@ export const calculateMinigameRewards = (difficulty, score) => {
 
         // Pick a random element from the selected tier
         const itemId = tierList[Math.floor(Math.random() * tierList.length)];
-        const rarity = tierKey === 'TIER_1' ? 'common' : 
-                      tierKey === 'TIER_2' ? 'uncommon' : 
-                      tierKey === 'TIER_3' ? 'rare' : 'legendary';
+        const rarity = tierKey === 'TIER_1' ? 'common' :
+            tierKey === 'TIER_2' ? 'uncommon' :
+                tierKey === 'TIER_3' ? 'rare' : 'legendary';
 
         // Check if item already in loot list, increment quantity instead of adding duplicate
         const existing = items.find(item => item.id === itemId);

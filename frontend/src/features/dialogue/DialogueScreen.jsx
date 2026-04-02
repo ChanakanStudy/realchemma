@@ -48,6 +48,24 @@ export default function DialogueScreen() {
         } else if (choiceId === 'play_minigame') {
             eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
             eventBus.emit(EVENTS.OPEN_MINIGAME, { id: 'menu' });
+        } else if (choiceId === 'play_matcher') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+            eventBus.emit(EVENTS.OPEN_MINIGAME, { id: 'symbol_matcher' });
+        } else if (choiceId === 'play_memory') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+            eventBus.emit(EVENTS.OPEN_MINIGAME, { id: 'element_memory' });
+        } else if (choiceId === 'play_sorter') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+            eventBus.emit(EVENTS.OPEN_MINIGAME, { id: 'atomic_sorter' });
+        } else if (choiceId === 'play_catcher') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+            eventBus.emit(EVENTS.OPEN_MINIGAME, { id: 'element_catcher' });
+        } else if (choiceId === 'play_mixer') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+            eventBus.emit(EVENTS.OPEN_MINIGAME, { id: 'liquid_mixer' });
+        } else if (choiceId === 'open_lab') {
+            eventBus.emit(EVENTS.CLOSE_NPC_POPUP);
+            eventBus.emit(EVENTS.OPEN_CRAFT_LAB);
         }
     };
 
