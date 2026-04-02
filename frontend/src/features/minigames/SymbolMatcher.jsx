@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 const ELEMENT_PAIRS = [
     { name: 'Hydrogen',   symbol: 'H',  color: '#4fc3f7' },
@@ -11,6 +13,16 @@ const ELEMENT_PAIRS = [
     { name: 'Gold',       symbol: 'Au', color: '#ffd54f' },
     { name: 'Silver',     symbol: 'Ag', color: '#e0e0e0' },
     { name: 'Copper',     symbol: 'Cu', color: '#ff8a65' },
+    { name: 'Silicon',    symbol: 'Si', color: '#90a4ae' },
+    { name: 'Phosphorus', symbol: 'P',  color: '#ffb74d' },
+    { name: 'Sulfur',     symbol: 'S',  color: '#fff176' },
+    { name: 'Chlorine',   symbol: 'Cl', color: '#aed581' },
+    { name: 'Potassium',  symbol: 'K',  color: '#f48fb1' },
+    { name: 'Calcium',    symbol: 'Ca', color: '#81c784' },
+    { name: 'Titanium',   symbol: 'Ti', color: '#cfd8dc' },
+    { name: 'Mercury',    symbol: 'Hg', color: '#b0bec5' },
+    { name: 'Lead',       symbol: 'Pb', color: '#90a4ae' },
+    { name: 'Nickel',     symbol: 'Ni', color: '#ce93d8' },
 ];
 
 function shuffle(arr) {
@@ -50,6 +62,13 @@ export default function SymbolMatcher({ onComplete }) {
         if (pairs.length > 0 && matched.size === pairs.length) {
             clearInterval(timerRef.current);
             setWin(true);
+            
+            // Emit win event for rewards
+            eventBus.emit(EVENTS.MINIGAME_WON, { 
+                gameId: 'symbol_matcher', 
+                score: score, 
+                difficulty: 'easy' 
+            });
         }
     }, [matched, pairs]);
 

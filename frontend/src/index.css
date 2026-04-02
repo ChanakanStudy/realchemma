@@ -2408,3 +2408,52 @@ sub {
         transform: translateY(0);
     }
 }
+/* --- Inventory Resource Bar --- */
+.inventory-resource-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    border-left: 4px solid var(--gold-primary);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.resource-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 30px;
+    transition: all 0.3s;
+}
+
+.resource-pill.stardust {
+    border-color: rgba(0, 242, 255, 0.3);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+}
+
+.res-icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+.res-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.res-value {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #00f2ff;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+}

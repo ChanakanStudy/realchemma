@@ -27,7 +27,8 @@ export const EVENTS = {
     QUEST_COMPLETED: 'quest:completed',
     BATTLE_WON: 'battle:won',
     OPEN_MINIGAME: 'minigame:open',
-    CLOSE_MINIGAME: 'minigame:close'
+    CLOSE_MINIGAME: 'minigame:close',
+    MINIGAME_WON: 'minigame:won'
 };
 
 export const MAX_PLAYER_HP = 300;
