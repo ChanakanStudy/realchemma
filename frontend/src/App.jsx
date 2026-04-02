@@ -291,6 +291,10 @@ function GameContent() {
       eventBus.on(EVENTS.MINIGAME_WON, (data) => {
         // data: { gameId, score, difficulty }
         const rewards = calculateMinigameRewards(data.difficulty || 'easy', data.score || 0);
+        const inventoryChanges = (rewards.items || []).map(item => ({
+          id: item.id,
+          quantity: item.qty,
+        }));
         
         let didLevelUp = false;
 
@@ -311,6 +315,28 @@ function GameContent() {
             saveGameState(next);
             return next;
         });
+
+        if (inventoryChanges.length > 0) {
+          (async () => {
+            try {
+              const syncedState = await adjustInventory(inventoryChanges);
+
+              setUserData(prev => {
+                const next = {
+                  ...prev,
+                  inventory: syncedState.inventory,
+                  discovered: syncedState.discovered ?? prev.discovered,
+                  discoveredCompounds: syncedState.discovered_compounds ?? prev.discoveredCompounds,
+                };
+                saveGameState(next);
+                return next;
+              });
+            } catch (error) {
+              console.error('[CHEMMA] Failed to sync minigame loot to inventory DB:', error);
+              queuePendingInventorySync(inventoryChanges);
+            }
+          })();
+        }
 
         // Trigger the reward UI in MinigameOverlay with potential level up info
         eventBus.emit('minigame:show_rewards', { 

@@ -11,7 +11,29 @@ export const ELEMENTS = [
   { symbol: 'S', name: 'Sulfur', color: '#f59e0b', rune: '🌋', desc: 'ธาตุสีเหลืองที่มีกลิ่นเป็นเอกลักษณ์ พบได้ในบริเวณภูเขาไฟ ใช้ในการทำดินปืนและยารักษาโรค' },
   { symbol: 'K', name: 'Potassium', color: '#ec4899', rune: '💥', desc: 'โลหะเนื้ออ่อนสีเงินที่ว่องไวต่อปฏิกิริยามาก จำเป็นต่อการทำงานของระบบประสาทและกล้ามเนื้อ' },
   { symbol: 'Fe', name: 'Iron', color: '#71717a', rune: '🛡️', desc: 'โลหะที่เป็นรากฐานของอารยธรรมมนุษย์ เป็นแกนกลางของโลกและอยู่ในเม็ดเลือดแดงของเรา' },
-  { symbol: 'Ca', name: 'Calcium', color: '#d97706', rune: '🦴', desc: 'ธาตุสำคัญที่ทำให้กระดูกและฟันแข็งแรง และเป็นส่วนประกอบหลักของเปลือกหอยและหินปูน' }
+  { symbol: 'Ca', name: 'Calcium', color: '#d97706', rune: '🦴', desc: 'ธาตุสำคัญที่ทำให้กระดูกและฟันแข็งแรง และเป็นส่วนประกอบหลักของเปลือกหอยและหินปูน' },
+  { symbol: 'He', name: 'Helium', color: '#c084fc', rune: '🎈', desc: 'แก๊สเฉื่อยเบามาก ใช้เติมลูกโป่งและงานวิจัยอุณหภูมิต่ำ' },
+  { symbol: 'Li', name: 'Lithium', color: '#f472b6', rune: '🔋', desc: 'โลหะเบาที่ใช้ในแบตเตอรี่และมีความไวต่อปฏิกิริยาสูง' },
+  { symbol: 'Be', name: 'Beryllium', color: '#22c55e', rune: '🧪', desc: 'โลหะเบาแข็งแรง ใช้ในอุตสาหกรรมอวกาศและวัสดุพิเศษ' },
+  { symbol: 'B', name: 'Boron', color: '#facc15', rune: '🔶', desc: 'กึ่งโลหะที่ใช้ในแก้วพิเศษและสารประกอบที่ทนความร้อน' },
+  { symbol: 'Ag', name: 'Silver', color: '#e5e7eb', rune: '⚪', desc: 'โลหะมีค่าที่นำไฟฟ้าและความร้อนได้ดีมาก' },
+  { symbol: 'Cu', name: 'Copper', color: '#fb7185', rune: '🟠', desc: 'โลหะนำไฟฟ้าสูง ใช้ในสายไฟและอุปกรณ์อุตสาหกรรม' },
+  { symbol: 'Mg', name: 'Magnesium', color: '#93c5fd', rune: '✨', desc: 'โลหะเบาที่ติดไฟได้ ใช้ในพลุและโลหะผสม' },
+  { symbol: 'Al', name: 'Aluminum', color: '#cbd5e1', rune: '🛩️', desc: 'โลหะเบา ทนทาน และใช้งานได้กว้างในชีวิตประจำวัน' },
+  { symbol: 'Si', name: 'Silicon', color: '#94a3b8', rune: '💠', desc: 'กึ่งโลหะสำคัญในชิปและวัสดุอิเล็กทรอนิกส์' },
+  { symbol: 'P', name: 'Phosphorus', color: '#f97316', rune: '🔥', desc: 'ธาตุที่มีหลายอัลโลโทรป ใช้ในปุ๋ยและสารเคมีอุตสาหกรรม' },
+  { symbol: 'Au', name: 'Gold', color: '#fbbf24', rune: '👑', desc: 'โลหะมีค่าที่ไม่ค่อยทำปฏิกิริยาและเป็นสัญลักษณ์ของความมั่งคั่ง' },
+  { symbol: 'Hg', name: 'Mercury', color: '#9ca3af', rune: '🌫️', desc: 'โลหะเหลวที่เป็นพิษ ใช้ในเครื่องมือวิทยาศาสตร์บางชนิด' },
+  { symbol: 'Pb', name: 'Lead', color: '#475569', rune: '🧱', desc: 'โลหะหนาแน่นสูง ใช้ในงานอุตสาหกรรมและมีความเป็นพิษ' },
+  { symbol: 'Ne', name: 'Neon', color: '#f9a8d4', rune: '💡', desc: 'แก๊สเฉื่อยที่ใช้ในป้ายไฟและให้แสงสีสวยงาม' },
+  { symbol: 'Ti', name: 'Titanium', color: '#a5b4fc', rune: '🛡️', desc: 'โลหะแข็งแรง น้ำหนักเบา และทนการกัดกร่อน' },
+  { symbol: 'Ni', name: 'Nickel', color: '#60a5fa', rune: '🔩', desc: 'โลหะที่ใช้ในเหรียญ โลหะผสม และแบตเตอรี่' },
+  { symbol: 'Pt', name: 'Platinum', color: '#f8fafc', rune: '💎', desc: 'โลหะมีค่าหายาก ใช้ในตัวเร่งปฏิกิริยาและงานอุตสาหกรรมระดับสูง' },
+  { symbol: 'U', name: 'Uranium', color: '#a3e635', rune: '☢️', desc: 'ธาตุกัมมันตรังสีที่มีพลังงานสูงและต้องจัดการอย่างระมัดระวัง' },
+  { symbol: 'Pu', name: 'Plutonium', color: '#f43f5e', rune: '☢️', desc: 'ธาตุกัมมันตรังสีหนัก ใช้ในงานนิวเคลียร์และต้องควบคุมอย่างเข้มงวด' },
+  { symbol: 'Ar', name: 'Argon', color: '#7dd3fc', rune: '🫧', desc: 'แก๊สเฉื่อยที่ใช้ในหลอดไฟและงานเชื่อม' },
+  { symbol: 'Kr', name: 'Krypton', color: '#c4b5fd', rune: '💠', desc: 'แก๊สเฉื่อยหายาก ใช้ในงานแสงและอุปกรณ์พิเศษ' },
+  { symbol: 'Xe', name: 'Xenon', color: '#fde68a', rune: '💎', desc: 'แก๊สเฉื่อยหนัก ใช้ในหลอดแฟลชและงานวิจัย' }
 ];
 
 export const RECIPES = [
