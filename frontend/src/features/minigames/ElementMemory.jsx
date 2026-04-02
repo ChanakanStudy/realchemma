@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 const ELEMENT_PAIRS = [
     { name: 'Hydrogen',   symbol: 'H',  color: '#4fc3f7' },
@@ -61,6 +63,13 @@ export default function ElementMemory({ onComplete }) {
         if (cards.length > 0 && matched.size === cards.length / 2) {
             clearInterval(timerRef.current);
             setWin(true);
+            
+            // Emit win event for rewards
+            eventBus.emit(EVENTS.MINIGAME_WON, { 
+                gameId: 'element_memory', 
+                score: score, 
+                difficulty: 'med' 
+            });
         }
     }, [matched, cards]);
 

@@ -25,6 +25,7 @@ const DEFAULT_STATE = {
     ],
     discovered: ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'Fe', 'Au', 'Ag', 'Cu', 'Hg', 'Pb', 'Ne'],
     discoveredCompounds: ['H2O', 'NaCl'],
+    stardust: 0,
     stats: {
         matches: 0,
         wins: 0,
@@ -108,4 +109,9 @@ export const addInventoryItem = (currentState, itemId, quantity) => {
     }
     
     return { ...currentState, inventory };
+};
+
+export const addStardust = (currentState, amount) => {
+    const currentStardust = currentState.stardust || 0;
+    return { ...currentState, stardust: currentStardust + amount };
 };

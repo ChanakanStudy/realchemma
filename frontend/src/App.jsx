@@ -24,10 +24,12 @@ import {
   saveGameState,
   addXP,
   addInventoryItem,
+  addStardust,
   acceptQuest,
   completeQuest
 } from './core/userState';
 import { getQuestState } from './api/client';
+import { calculateMinigameRewards } from './features/minigames/rewardData';
 
 function GameContent() {
   const { gameState, setGameState, showDashboard, setShowDashboard, chatOpen, setChatOpen, questState, setQuestState } = useGameContext();
@@ -197,6 +199,36 @@ function GameContent() {
       eventBus.on(EVENTS.OPEN_CRAFT_LAB, () => {
         setShowDashboard(false);
         setLabOpen(true);
+      }),
+      eventBus.on(EVENTS.MINIGAME_WON, (data) => {
+        // data: { gameId, score, difficulty }
+        const rewards = calculateMinigameRewards(data.difficulty || 'easy', data.score || 0);
+        
+        let didLevelUp = false;
+
+        setUserData(prev => {
+            let next = addXP(prev, rewards.xp);
+            didLevelUp = next.leveledUp;
+
+            if (rewards.items) {
+                rewards.items.forEach(item => {
+                    next = addInventoryItem(next, item.id, item.qty);
+                });
+            }
+
+            if (rewards.stardust) {
+                next = addStardust(next, rewards.stardust);
+            }
+
+            saveGameState(next);
+            return next;
+        });
+
+        // Trigger the reward UI in MinigameOverlay with potential level up info
+        eventBus.emit('minigame:show_rewards', { 
+            ...rewards, 
+            leveledUp: didLevelUp 
+        });
       })
     ];
     return () => unsubs.forEach(u => u());

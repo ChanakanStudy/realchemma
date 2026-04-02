@@ -192,6 +192,13 @@ function ItemsTab({ userData, setUserData, onClose }) {
 
   return (
     <div className="inventory-scroll animate-fade-in">
+      <div className="inventory-resource-bar">
+        <div className="resource-pill stardust">
+          <span className="res-icon">✨</span>
+          <span className="res-label">STARDUST:</span>
+          <span className="res-value">{userData.stardust || 0}</span>
+        </div>
+      </div>
       {/* --- ELEMENTS SECTION --- */}
       {elements.length > 0 && (
         <section className="inventory-section">

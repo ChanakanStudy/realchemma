@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 const ELEMENT_PAIRS = [
     { name: 'Hydrogen',   symbol: 'H',  color: '#4fc3f7' },
@@ -60,6 +62,13 @@ export default function SymbolMatcher({ onComplete }) {
         if (pairs.length > 0 && matched.size === pairs.length) {
             clearInterval(timerRef.current);
             setWin(true);
+            
+            // Emit win event for rewards
+            eventBus.emit(EVENTS.MINIGAME_WON, { 
+                gameId: 'symbol_matcher', 
+                score: score, 
+                difficulty: 'easy' 
+            });
         }
     }, [matched, pairs]);
 

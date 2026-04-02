@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 const ELEMENTS = [
     { symbol: 'H', color: '#4fc3f7', score: 10 },
@@ -115,6 +117,13 @@ export default function ElementCatcher({ onComplete }) {
     useEffect(() => {
         if (score >= 300) {
             setWin(true);
+            
+            // Emit win event for rewards
+            eventBus.emit(EVENTS.MINIGAME_WON, { 
+                gameId: 'element_catcher', 
+                score: score, 
+                difficulty: 'med' 
+            });
         }
     }, [score]);
 

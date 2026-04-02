@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 
 const ELEMENTS = [
     { name: 'Hydrogen', symbol: 'H', number: 1, color: '#4fc3f7' },
@@ -55,8 +57,16 @@ export default function AtomicSorter({ onComplete }) {
         const isSorted = items.every((el, i) => i === 0 || el.number >= items[i - 1].number);
         if (isSorted) {
             clearInterval(timerRef.current);
-            setScore(s => s + 500 + (timer * 10));
+            const finalScore = score + 500 + (timer * 10);
+            setScore(finalScore);
             setWin(true);
+            
+            // Emit win event for rewards
+            eventBus.emit(EVENTS.MINIGAME_WON, { 
+                gameId: 'atomic_sorter', 
+                score: finalScore, 
+                difficulty: 'hard' 
+            });
         } else {
             setScore(s => Math.max(0, s - 50));
             // Visual shake feedback (could be added)

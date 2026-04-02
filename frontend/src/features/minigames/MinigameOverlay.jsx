@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameContext } from '../../core/GameContext';
+import { eventBus } from '../../core/EventBus';
+import { EVENTS } from '../../core/constants';
 import SymbolMatcher from './SymbolMatcher';
 import ElementMemory from './ElementMemory';
 import AtomicSorter from './AtomicSorter';
@@ -8,15 +10,23 @@ import LiquidMixer from './LiquidMixer';
 
 export default function MinigameOverlay() {
     const { minigameActive, setMinigameActive } = useGameContext();
+    const [loot, setLoot] = useState(null);
+
+    useEffect(() => {
+        const unsub = eventBus.on('minigame:show_rewards', (rewards) => {
+            setLoot(rewards);
+        });
+        return () => unsub();
+    }, []);
 
     if (!minigameActive) return null;
 
     const games = [
         { id: 'symbol_matcher', name: 'Symbol Matcher', difficulty: 'ง่าย', desc: 'จับคู่ชื่อธาตุกับสัญลักษณ์' },
-        { id: 'atomic_sorter', name: 'Atomic Sorter', difficulty: 'ยาก', desc: 'เรียงลำดับธาตุตามเลขอะตอม' },
         { id: 'liquid_mixer', name: 'Liquid Mixer', difficulty: 'ง่าย', desc: 'เทสารลงในกระบอกตวงให้ได้ระดับ' },
         { id: 'element_memory', name: 'Element Memory', difficulty: 'ปานกลาง', desc: 'เกมจับคู่แผ่นปยายเปิดไพ่ธาตุ' },
-        { id: 'element_catcher', name: 'Element Catcher', difficulty: 'ปานกลาง', desc: 'เก็บธาตุที่ตกลงมาใส่ตะกร้า' }
+        { id: 'element_catcher', name: 'Element Catcher', difficulty: 'ปานกลาง', desc: 'เก็บธาตุที่ตกลงมาใส่ตะกร้า' },
+        { id: 'atomic_sorter', name: 'Atomic Sorter', difficulty: 'ยาก', desc: 'เรียงลำดับธาตุตามเลขอะตอม' },
     ];
 
     const handleSelectGame = (gameId) => {
@@ -49,7 +59,7 @@ export default function MinigameOverlay() {
                                             <div className="minigame-name">{game.name}</div>
                                             <div className="minigame-desc">{game.desc}</div>
                                         </div>
-                                        <div className={`minigame-difficulty ${game.difficulty === 'ง่าย' ? 'easy' : 'med'}`}>
+                                        <div className={`minigame-difficulty ${game.difficulty === 'ง่าย' ? 'easy' : game.difficulty === 'ปานกลาง' ? 'med' : 'hard'}`}>
                                             {game.difficulty}
                                         </div>
                                     </div>
@@ -81,6 +91,65 @@ export default function MinigameOverlay() {
                         ✦ "ผู้ที่พิสูจน์ตนได้เท่านั้น จึงคู่ควรแก่ความรู้แห่งธาตุ" — เอลิมา
                     </div>
                 </div>
+
+                {/* --- Loot / Reward Modal --- */}
+                {loot && (
+                    <div className="loot-modal-overlay">
+                        <div className={`loot-card ${loot.isPerfect ? 'perfect' : ''}`}>
+                            <div className="loot-sparkles"></div>
+                            
+                            {loot.leveledUp && (
+                                <div className="level-up-banner">
+                                    <div className="lvl-text">LEVEL UP!</div>
+                                    <div className="lvl-subtext">เจ้าแข็งแกร่งขึ้นแล้ว</div>
+                                </div>
+                            )}
+
+                            <div className="loot-header">
+                                <div className="loot-icon">{loot.isPerfect ? '✨💎✨' : '🎁'}</div>
+                                <h3>{loot.isPerfect ? 'งานวิจัยระดับสมบูรณ์!' : 'การวิจัยสำเร็จ!'}</h3>
+                                <div className="loot-subtitle">
+                                    {loot.isPerfect ? 'เจ้าเข้าถึงแก่นแท้แห่งธาตุได้อย่างไร้ที่ติ' : 'เจ้าได้รับความรู้และทรัพยากรใหม่'}
+                                </div>
+                            </div>
+                            
+                            <div className="loot-body">
+                                <div className="reward-row">
+                                    <div className="reward-item xp">
+                                        <div className="reward-label">EXPERIENCE</div>
+                                        <div className="reward-value">+{loot.xp} XP</div>
+                                    </div>
+                                    {loot.stardust > 0 && (
+                                        <div className="reward-item stardust">
+                                            <div className="reward-label">STARDUST</div>
+                                            <div className="reward-value">+{loot.stardust} ✨</div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="loot-grid-container">
+                                    <div className="grid-label">ธาตุที่รวบรวมได้</div>
+                                    <div className="loot-grid">
+                                        {loot.items && loot.items.map(item => (
+                                            <div key={item.id} className={`reward-element ${item.rarity || 'common'}`}>
+                                                <div className="element-qty">x{item.qty}</div>
+                                                <div className="element-symbol">{item.id}</div>
+                                                <div className="rarity-dot"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button className="loot-collect-btn" onClick={() => {
+                                setLoot(null);
+                                setMinigameActive({ id: 'menu' });
+                            }}>
+                                สะสมของรางวัล
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <style>{`
@@ -233,6 +302,13 @@ export default function MinigameOverlay() {
                 .minigame-difficulty.med {
                     background: rgba(245, 158, 11, 0.2);
                     color: #fbbf24;
+                    border: 1px solid rgba(245, 158, 11, 0.3);
+                }
+
+                .minigame-difficulty.hard {
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #f87171;
+                    border: 1px solid rgba(239, 68, 68, 0.3);
                 }
 
                 .minigame-footer {
@@ -252,6 +328,125 @@ export default function MinigameOverlay() {
                     border-radius: 6px;
                     font-weight: bold;
                     cursor: pointer;
+                }
+
+                /* Loot Modal Styling */
+                .loot-modal-overlay {
+                    position: absolute;
+                    top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0, 5, 15, 0.9);
+                    display: flex; justify-content: center; align-items: center;
+                    z-index: 3000;
+                    border-radius: 20px;
+                    animation: fadeIn 0.3s ease;
+                }
+                .loot-card {
+                    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+                    border: 1px solid rgba(0, 242, 255, 0.4);
+                    border-radius: 24px;
+                    padding: 32px;
+                    width: 440px;
+                    max-width: 90%;
+                    text-align: center;
+                    position: relative;
+                    box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+                    animation: lootPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    overflow: hidden;
+                }
+                .loot-card.perfect {
+                    border-color: #fbbf24;
+                    box-shadow: 0 0 60px rgba(251, 191, 36, 0.3);
+                }
+                @keyframes lootPop {
+                    from { transform: scale(0.5) translateY(50px); opacity: 0; }
+                    to { transform: scale(1) translateY(0); opacity: 1; }
+                }
+
+                .level-up-banner {
+                    background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+                    padding: 6px 0; margin-bottom: 20px; position: relative;
+                    animation: slideIn 0.6s ease-out;
+                }
+                .lvl-text { font-size: 1.4rem; font-weight: 900; color: #000; letter-spacing: 4px; }
+                .lvl-subtext { font-size: 0.7rem; color: #000; font-weight: bold; }
+                @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+                .loot-header h3 { color: #00f2ff; margin: 12px 0 4px; font-size: 1.5rem; }
+                .perfect .loot-header h3 { color: #fbbf24; }
+                .loot-subtitle { font-size: 0.8rem; color: #94a3b8; margin-bottom: 24px; }
+                .loot-icon { font-size: 3rem; animation: float 3s infinite ease-in-out; }
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+
+                .reward-row { display: flex; gap: 12px; margin-bottom: 20px; }
+                .reward-item {
+                    flex: 1;
+                    background: rgba(15, 23, 42, 0.6);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    padding: 12px; border-radius: 12px;
+                }
+                .reward-item.xp { border-color: rgba(251, 191, 36, 0.2); }
+                .reward-item.stardust { border-color: rgba(0, 242, 255, 0.2); }
+                
+                .reward-label { font-size: 0.55rem; color: #64748b; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+                .reward-item.xp .reward-value { color: #fbbf24; }
+                .reward-item.stardust .reward-value { color: #00f2ff; }
+                .reward-value { font-size: 1.3rem; font-weight: bold; font-family: monospace; }
+                
+                .loot-grid-container {
+                    background: rgba(0, 0, 0, 0.2);
+                    padding: 16px; border-radius: 16px; margin-bottom: 24px;
+                }
+                .grid-label { font-size: 0.7rem; color: #475569; margin-bottom: 12px; text-align: left; }
+                .loot-grid {
+                    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+                }
+                .reward-element {
+                    width: 70px; height: 75px;
+                    background: #111122; border: 2px solid #1e1e3a;
+                    border-radius: 12px; display: flex; flex-direction: column;
+                    justify-content: center; align-items: center; position: relative;
+                    transition: all 0.3s;
+                }
+                .reward-element:hover { transform: translateY(-3px); }
+                
+                /* Rarity Colors */
+                .reward-element.common { border-color: #64748b; }
+                .reward-element.uncommon { border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
+                .reward-element.rare { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+                .reward-element.legendary { border-color: #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); animation: legendaryPulse 2s infinite; }
+                
+                @keyframes legendaryPulse {
+                    0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
+                    50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.6); }
+                }
+
+                .element-qty {
+                    position: absolute; top: -8px; right: -8px;
+                    background: #ef4444; color: #fff; font-size: 0.7rem;
+                    padding: 2px 6px; border-radius: 10px; font-weight: bold; z-index: 2;
+                }
+                .element-symbol { font-size: 1.5rem; font-weight: bold; color: #fff; z-index: 1; }
+                .rarity-dot {
+                    width: 6px; height: 6px; border-radius: 50%; margin-top: 5px;
+                }
+                .common .rarity-dot { background: #64748b; }
+                .uncommon .rarity-dot { background: #22c55e; }
+                .rare .rarity-dot { background: #3b82f6; }
+                .legendary .rarity-dot { background: #a855f7; }
+
+                .loot-collect-btn {
+                    width: 100%; padding: 16px;
+                    background: linear-gradient(90deg, #00f2ff, #22d3ee);
+                    color: #0f172a; border: none; border-radius: 14px;
+                    font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.2s;
+                }
+                .perfect .loot-collect-btn { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+                .loot-collect-btn:hover {
+                    box-shadow: 0 0 25px rgba(0, 242, 255, 0.4);
+                    transform: translateY(-2px);
                 }
             `}</style>
         </div>
