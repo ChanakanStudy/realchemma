@@ -131,6 +131,30 @@ export default class WorldScene extends Phaser.Scene {
                     tree.setDepth(y + 20);
                 } else if (cell === 13) { // Crop Field
                     this.add.sprite(x, y, 't_crop').setDepth(0);
+                } else if (cell === 21) { // Monolith
+                    const mon = this.physics.add.sprite(x, y, 'obj_monolith').setDepth(y);
+                    mon.setImmovable(true);
+                    mon.npcId = 'monolith';
+                    this.npcs.add(mon);
+                    this.tweens.add({ targets: mon, y: y - 10, duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+                } else if (cell === 22) { // Magnetic Core
+                    const core = this.physics.add.sprite(x, y, 'obj_magnetic_core').setDepth(y);
+                    core.setImmovable(true);
+                    core.npcId = 'magnetic_core';
+                    this.npcs.add(core);
+                    this.tweens.add({ targets: core, angle: 360, duration: 4000, repeat: -1 });
+                } else if (cell === 23) { // Stardust Collector
+                    const col = this.physics.add.sprite(x, y, 'obj_collector').setDepth(y);
+                    col.setImmovable(true);
+                    col.npcId = 'collector';
+                    this.npcs.add(col);
+                    this.tweens.add({ targets: col, scale: 1.1, duration: 1000, yoyo: true, repeat: -1 });
+                } else if (cell === 24) { // Alchemist Mina
+                    const mina = this.physics.add.sprite(x, y, 'npc_alchemist').setDepth(y);
+                    mina.setImmovable(true);
+                    mina.npcId = 'mina';
+                    this.npcs.add(mina);
+                    this.tweens.add({ targets: mina, y: y - 5, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
                 }
             }
         }
@@ -431,10 +455,50 @@ export default class WorldScene extends Phaser.Scene {
         } else if (target === 'assistant') {
             eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
                 npcId: 'assistant',
-                name: '⚗️ เอลิมา (Elima) — นักเร่ร่อนแห่งธาตุ',
-                message: '...ข้าได้ยินเรื่องแล็บแห่งนี้มานาน สายลมพาข้ามา\n\nหากเจ้าต้องการทดสอบความรู้แห่งธาตุ... ข้าจะเป็นผู้พิสูจน์',
+                name: '⚗️ เอลิมา (Elima)',
+                message: 'ยินดีที่ได้รู้จักนักสำรวจ! ข้าคือผู้พิทักษ์รหัสลับแห่งธาตุ... หากเจ้าพร้อมข้ามีบททดสอบการจับคู่สัญลักษณ์ธาตุมาให้ลอง',
                 choices: [
-                    { id: 'play_minigame', label: '⚗️ รับการทดสอบจากเอลิมา' },
+                    { id: 'play_matcher', label: '⚗️ เริ่มการทดสอบ (Symbol Matcher)' },
+                    { id: 'leave', label: 'ไว้คราวหน้า' }
+                ]
+            });
+        } else if (target === 'monolith') {
+            eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                npcId: 'monolith',
+                name: '🪨 ศิลาจารึกโบราณ (Ancient Monolith)',
+                message: '...อักษรรูนบนศิลาเริ่มเปล่งแสง ความทรงจำแห่งธาตุคือหัวใจของความรู้... เจ้าจำตำแหน่งของพวกมันได้หรือไม่?',
+                choices: [
+                    { id: 'play_memory', label: '🪨 เริ่มการทดสอบ (Element Memory)' },
+                    { id: 'leave', label: 'ไว้คราวหน้า' }
+                ]
+            });
+        } else if (target === 'magnetic_core') {
+            eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                npcId: 'magnetic_core',
+                name: '🌀 แกนแม่เหล็กไฟฟ้า (Magnetic Core)',
+                message: '*เสียงพึมพำของเครื่องจักร* ข้อมูลอะตอมกำลังกระจัดกระจาย ต้องการการจัดระเบียบให้ถูกต้อง!',
+                choices: [
+                    { id: 'play_sorter', label: '🌀 เริ่มการทดสอบ (Atomic Sorter)' },
+                    { id: 'leave', label: 'ไว้คราวหน้า' }
+                ]
+            });
+        } else if (target === 'collector') {
+            eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                npcId: 'collector',
+                name: '✨ เครื่องดักละอองดาว (Collector)',
+                message: 'ละอองดาวคือกุญแจสู่พลังแฝง... แต่เจ้าต้องว่องไวพอที่จะเก็บรวบรวมพวกมันก่อนจะสลายไป',
+                choices: [
+                    { id: 'play_catcher', label: '✨ เริ่มการทดสอบ (Element Catcher)' },
+                    { id: 'leave', label: 'ไว้คราวหน้า' }
+                ]
+            });
+        } else if (target === 'mina') {
+            eventBus.emit(EVENTS.OPEN_NPC_POPUP, {
+                npcId: 'mina',
+                name: '🧪 นักแปรธาตุมีนา (Mina)',
+                message: 'โอ้! สารสกัดพวกนี้กำลังเดือดได้ที่เลยละ เจ้าสนใจมาช่วยข้าสกัดสารเคมีให้บริสุทธิ์เพื่อรับธาตุ Rare ไหม?',
+                choices: [
+                    { id: 'play_mixer', label: '🧪 เริ่มการสกัดสาร (Liquid Mixer)' },
                     { id: 'leave', label: 'ไว้คราวหน้า' }
                 ]
             });
@@ -490,6 +554,10 @@ export default class WorldScene extends Phaser.Scene {
         createPixelTexture('t_lab_floor', ART_DATA.t_lab_floor, 3);
         createPixelTexture('lab_wall', ART_DATA.lab_wall, 3);
         createPixelTexture('lab_door', ART_DATA.lab_door, 3);
+        createPixelTexture('obj_monolith', ART_DATA.obj_monolith, 3);
+        createPixelTexture('obj_magnetic_core', ART_DATA.obj_magnetic_core, 3);
+        createPixelTexture('obj_collector', ART_DATA.obj_collector, 3);
+        createPixelTexture('npc_alchemist', ART_DATA.npc_alchemist, 3);
 
         // Placeholder for house/building if not in ART_DATA (reusing patterns)
         createPixelTexture('building', [
