@@ -348,7 +348,7 @@ export default class WorldScene extends Phaser.Scene {
                 ]
             });
         } else if (target === 'chemist') {
-            const userData = JSON.parse(localStorage.getItem('chemma_game_data') || '{}');
+            const userData = window.chemmaUserData || {};
             const quests = userData.quests || [];
             const carbonQuest = quests.find(q => q.id === 'carbon_hunt');
             const battleQuest = quests.find(q => q.id === 'battle_quest');

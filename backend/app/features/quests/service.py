@@ -49,7 +49,7 @@ DEFAULT_QUESTS = [
 ]
 
 
-def _quest_state_payload(definitions, progress_rows, user_id):
+def _quest_state_payload(definitions, progress_rows, user_uuid):
     progress_by_quest = {row.quest_id: row for row in progress_rows}
 
     quests = []
@@ -83,7 +83,7 @@ def _quest_state_payload(definitions, progress_rows, user_id):
             completed_quests.append(quest_payload)
 
     return {
-        "user_id": user_id,
+        "user_uuid": user_uuid,
         "quests": quests,
         "active_quest": active_quest,
         "available_quests": available_quests,
@@ -110,31 +110,31 @@ def seed_default_quest_definitions(db: Session):
         db.commit()
 
 
-def get_quest_state(db: Session, user_id: int):
+def get_quest_state(db: Session, user_uuid: str):
     seed_default_quest_definitions(db)
 
     definitions = db.query(QuestDefinition).order_by(QuestDefinition.order_index.asc()).all()
     if not definitions:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Quest catalog is not configured")
 
-    progress_rows = db.query(UserQuestProgress).filter(UserQuestProgress.user_id == user_id).all()
+    progress_rows = db.query(UserQuestProgress).filter(UserQuestProgress.user_uuid == user_uuid).all()
     if not progress_rows:
         for index, definition in enumerate(definitions):
             db.add(
                 UserQuestProgress(
-                    user_id=user_id,
+                    user_uuid=user_uuid,
                     quest_id=definition.id,
                     status="available" if index == 0 else "locked",
                 )
             )
         db.commit()
-        progress_rows = db.query(UserQuestProgress).filter(UserQuestProgress.user_id == user_id).all()
+        progress_rows = db.query(UserQuestProgress).filter(UserQuestProgress.user_uuid == user_uuid).all()
 
-    return _quest_state_payload(definitions, progress_rows, user_id)
+    return _quest_state_payload(definitions, progress_rows, user_uuid)
 
 
-def accept_quest(db: Session, user_id: int, quest_id: str):
-    state = get_quest_state(db, user_id)
+def accept_quest(db: Session, user_uuid: str, quest_id: str):
+    state = get_quest_state(db, user_uuid)
     quests = {quest["id"]: quest for quest in state["quests"]}
     selected_quest = quests.get(quest_id)
 
@@ -153,7 +153,7 @@ def accept_quest(db: Session, user_id: int, quest_id: str):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Quest is locked")
 
     progress = db.query(UserQuestProgress).filter(
-        UserQuestProgress.user_id == user_id,
+        UserQuestProgress.user_uuid == user_uuid,
         UserQuestProgress.quest_id == quest_id,
     ).first()
 
@@ -165,11 +165,11 @@ def accept_quest(db: Session, user_id: int, quest_id: str):
     progress.updated_at = datetime.datetime.utcnow()
     db.commit()
 
-    return get_quest_state(db, user_id)
+    return get_quest_state(db, user_uuid)
 
 
-def complete_quest(db: Session, user_id: int, quest_id: str, boss_id: str):
-    state = get_quest_state(db, user_id)
+def complete_quest(db: Session, user_uuid: str, quest_id: str, boss_id: str):
+    state = get_quest_state(db, user_uuid)
     active_quest = state["active_quest"]
 
     if not active_quest:
@@ -182,7 +182,7 @@ def complete_quest(db: Session, user_id: int, quest_id: str, boss_id: str):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Boss mismatch for quest completion")
 
     progress = db.query(UserQuestProgress).filter(
-        UserQuestProgress.user_id == user_id,
+        UserQuestProgress.user_uuid == user_uuid,
         UserQuestProgress.quest_id == quest_id,
     ).first()
 
@@ -198,7 +198,7 @@ def complete_quest(db: Session, user_id: int, quest_id: str, boss_id: str):
     if quest_index is not None and quest_index + 1 < len(definitions):
         next_definition = definitions[quest_index + 1]
         next_progress = db.query(UserQuestProgress).filter(
-            UserQuestProgress.user_id == user_id,
+            UserQuestProgress.user_uuid == user_uuid,
             UserQuestProgress.quest_id == next_definition.id,
         ).first()
         if next_progress and next_progress.status == "locked":
@@ -206,4 +206,4 @@ def complete_quest(db: Session, user_id: int, quest_id: str, boss_id: str):
             next_progress.updated_at = datetime.datetime.utcnow()
 
     db.commit()
-    return get_quest_state(db, user_id)
+    return get_quest_state(db, user_uuid)

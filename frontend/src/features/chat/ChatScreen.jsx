@@ -32,8 +32,6 @@ export default function ChatScreen() {
         // Listener for triggered prompts (e.g. from Inventory)
         const handleTriggerPrompt = (prompt) => {
             setChatOpen(true);
-            // We need to wait for state update or use a ref-like approach
-            // But here we can just call sendMessage with the prompt directly
             if (prompt) {
                 setTimeout(() => {
                     executeSendMessage(prompt);

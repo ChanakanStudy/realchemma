@@ -21,13 +21,13 @@ def get_current_user(authorization: str = Header(None), db: Session = Depends(ge
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
+        subject = payload.get("sub")
+        if subject is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = db.query(User).filter(User.uuid == subject).first()
     if user is None:
         raise credentials_exception
 

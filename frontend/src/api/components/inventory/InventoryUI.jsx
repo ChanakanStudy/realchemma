@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import PeriodicTable from '../codex/PeriodicTable';
-import { ELEMENTS, RECIPES } from '../../features/battle/battleLogic';
-import { formatFormula } from '../../core/utils';
-import { eventBus } from '../../core/EventBus';
-import { EVENTS } from '../../core/constants';
-import { getQuestState } from '../../api/client';
-import { useGameContext } from '../../core/GameContext';
+import { ELEMENTS, RECIPES } from '../../../features/battle/battleLogic';
+import { formatFormula } from '../../../core/utils';
+import { eventBus } from '../../../core/EventBus';
+import { EVENTS } from '../../../core/constants';
+import { getQuestState } from '../../client';
+import { useGameContext } from '../../../core/GameContext';
 
 export default function InventoryUI({
   activeTab = 'backpack',

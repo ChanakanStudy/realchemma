@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ELEMENTS } from '../battle/battleLogic';
 import { attemptExperimentFromInventory } from '../../core/alchemy';
-import { saveGameState } from '../../core/userState';
+import { buildInventoryDelta, queuePendingInventorySync, saveGameState } from '../../core/userState';
+import { adjustInventory, runLabExperiment } from '../../api/client';
 
 export default function LabScreen({ userData, setUserData, onClose }) {
   const [selectedSymbols, setSelectedSymbols] = useState([]);
@@ -53,8 +54,17 @@ export default function LabScreen({ userData, setUserData, onClose }) {
     setLastResult(null);
   };
 
-  const runExperiment = () => {
-    const result = attemptExperimentFromInventory(userData, selectedSymbols);
+  const runExperiment = async () => {
+    let result;
+    let usedBackend = true;
+    const previousInventory = userData.inventory;
+
+    try {
+      result = await runLabExperiment(selectedSymbols);
+    } catch (error) {
+      usedBackend = false;
+      result = attemptExperimentFromInventory(userData, selectedSymbols);
+    }
 
     if (!result.success) {
       setCraftNotice(result.message);
@@ -66,14 +76,34 @@ export default function LabScreen({ userData, setUserData, onClose }) {
     const nextState = {
       ...userData,
       inventory: result.inventory,
-      discoveredCompounds: result.discoveredCompounds,
-      stats: result.stats,
+      discovered: result.discovered || userData.discovered,
+      discoveredCompounds: result.discovered_compounds || result.discoveredCompounds || userData.discoveredCompounds,
+      stats: result.stats || userData.stats,
     };
 
     if (setUserData) {
       setUserData(nextState);
     }
     saveGameState(nextState);
+
+    if (!usedBackend) {
+      const inventoryDelta = buildInventoryDelta(previousInventory, nextState.inventory);
+      try {
+        const syncedState = await adjustInventory(inventoryDelta);
+        if (setUserData) {
+          setUserData(prev => ({
+            ...prev,
+            inventory: syncedState.inventory,
+            discovered: syncedState.discovered ?? prev.discovered,
+            discoveredCompounds: syncedState.discovered_compounds ?? prev.discoveredCompounds,
+          }));
+        }
+      } catch (syncError) {
+        console.error('[CHEMMA] Failed to sync local craft to DB, queueing delta:', syncError);
+        queuePendingInventorySync(inventoryDelta);
+      }
+    }
+
     setCraftNotice(result.message);
     setLastResult(result);
     pushLabLog(`REACTOR: ${result.message}`);

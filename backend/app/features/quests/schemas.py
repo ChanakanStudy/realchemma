@@ -21,7 +21,7 @@ class QuestOut(BaseModel):
 
 
 class QuestStateResponse(BaseModel):
-    user_id: int
+    user_uuid: str
     quests: List[QuestOut]
     active_quest: Optional[QuestOut] = None
     available_quests: List[QuestOut] = Field(default_factory=list)
