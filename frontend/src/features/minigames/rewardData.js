@@ -7,27 +7,27 @@ export const ELEMENT_TIERS = {
     TIER_1: ['H', 'O', 'C', 'Na', 'Cl', 'N'], // Common
     TIER_2: ['Fe', 'Ag', 'Cu', 'Mg', 'Al', 'Si', 'P', 'K'], // Uncommon
     TIER_3: ['Au', 'Hg', 'Pb', 'Ne', 'Ti', 'Ni'], // Rare
-    TIER_4: ['Pt', 'U', 'Pu', 'Ar', 'Kr', 'Xe'], // Legendary
+    TIER_4: ['Pt', 'U', 'Pu', 'Ar', 'Kr', 'Xe'], // Epic
 };
 
 export const DIFFICULTY_REWARDS = {
     easy: {
-        minXP: 20,
-        maxXP: 45,
+        minXP: 15,
+        maxXP: 32,
         lootCount: 2,
         possibleTiers: ['TIER_1'],
         stardustRange: [2, 8]
     },
     med: {
-        minXP: 55,
-        maxXP: 105,
+        minXP: 40,
+        maxXP: 80,
         lootCount: 3,
         possibleTiers: ['TIER_1', 'TIER_2'],
         stardustRange: [10, 25]
     },
     hard: {
-        minXP: 180,
-        maxXP: 420,
+        minXP: 120,
+        maxXP: 280,
         lootCount: 4,
         possibleTiers: ['TIER_2', 'TIER_3'],
         stardustRange: [40, 100]

@@ -150,7 +150,7 @@ export default class WorldScene extends Phaser.Scene {
                     this.npcs.add(col);
                     this.tweens.add({ targets: col, scale: 1.1, duration: 1000, yoyo: true, repeat: -1 });
                 } else if (cell === 24) { // Alchemist Mina
-                    const mina = this.physics.add.sprite(x, y, 'npc_alchemist').setDepth(y);
+                    const mina = this.physics.add.sprite(x, y, 'npc_alchemist_v4').setDepth(y);
                     mina.setImmovable(true);
                     mina.npcId = 'mina';
                     this.npcs.add(mina);
@@ -506,14 +506,14 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     generateSmoothTextures() {
-        if (this.textures.exists('t_grass')) return;
-
         console.time('[CHEMMA] Pixel Gen');
 
         // --- 👾 Prodedural Pixel Art Generator ---
         // Converts the ART_DATA string arrays into Phaser Textures at runtime.
         const createPixelTexture = (key, data, pixelSize = 3) => {
-            if (this.textures.exists(key)) return;
+            if (this.textures.exists(key)) {
+                this.textures.remove(key);
+            }
             const height = data.length;
             const width = data[0].length;
             const gfx = this.make.graphics();
@@ -557,7 +557,7 @@ export default class WorldScene extends Phaser.Scene {
         createPixelTexture('obj_monolith', ART_DATA.obj_monolith, 3);
         createPixelTexture('obj_magnetic_core', ART_DATA.obj_magnetic_core, 3);
         createPixelTexture('obj_collector', ART_DATA.obj_collector, 3);
-        createPixelTexture('npc_alchemist', ART_DATA.npc_alchemist, 3);
+        createPixelTexture('npc_alchemist_v4', ART_DATA.npc_alchemist, 3);
 
         // Placeholder for house/building if not in ART_DATA (reusing patterns)
         createPixelTexture('building', [

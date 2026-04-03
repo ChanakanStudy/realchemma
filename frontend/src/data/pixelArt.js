@@ -15,7 +15,8 @@ export const PALETTE = {
     '6': '#81D4FA', '7': '#8D6E63', '8': '#5D4037', '9': '#BCAAA4', 'A': '#212121',
     'B': '#1B5E20', 'D': '#3E2723', 'E': '#795548', 'F': '#A1887F',
     'f': '#FF69B4', 'L': '#FFD700', 'n': '#66BB6A', 'm': '#43A047', 'q': '#1565C0',
-    'i': '#E8F5E9', 'j': '#C8E6C9'
+    'i': '#E8F5E9', 'j': '#C8E6C9',
+    'l': '#B8860B', 'x': '#E0E0E0', 'd': '#EBC2B2', 'v': '#9C27B0'
 };
 
 // ArtData: Pixel art representations for game objects
@@ -490,19 +491,21 @@ export const ART_DATA = {
         "000CCCCCCCCCC000"
     ],
     npc_alchemist: [
-        "000000hhhh000000",
-        "00000hhhhhh00000",
-        "0000shhhhhhs0000",
-        "0000shwshhsh0000",
-        "00000ssssss00000",
-        "00000gggggg00000",
-        "0000gggggggg0000",
-        "000gbggggggb0000",
-        "000bggggggggb000",
-        "000bbbbbbbbb0000",
-        "0000bb000bb00000",
-        "0000bb000bb00000",
-        "000bbb000bbb0000",
-        "000bb00000bb0000"
+        "0000000KKKK00000",
+        "00000KLLLLLKK000",
+        "0000KlLLLLLLlK00",
+        "000KLLLLLLLLLLK0",
+        "000KssddddddssK0",
+        "000KsKooKKooKsK0",
+        "000KdKkkKKkkKdK0",
+        "0000KdssssssdK00",
+        "00000KddddddK000",
+        "0000KKvwwwvKK000",
+        "000KvvvvvvvvvvK0", // Purple Sash/Belt
+        "000KwwxxxxxxwwK0",
+        "000KwwxxxxxxwwK0",
+        "0000KwwKKxxwK000",
+        "0000KbbKKbbK0000",
+        "0000KKK00KKK0000"
     ]
 };

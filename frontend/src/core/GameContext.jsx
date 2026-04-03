@@ -89,7 +89,6 @@ export const GameProvider = ({ children }) => {
         minigameActive,
         setMinigameActive: (data) => {
             setMinigameActive(data);
-            eventBus.emit(data ? EVENTS.OPEN_MINIGAME : EVENTS.CLOSE_MINIGAME, data);
         }
     };
 

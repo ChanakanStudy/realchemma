@@ -367,7 +367,7 @@ function GameContent() {
         />
       )}
 
-      <MinigameOverlay />
+      <MinigameOverlay level={userData.level} />
 
       <div id="flashScreen" className="white-flash"></div>
     </>

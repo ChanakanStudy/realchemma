@@ -8,9 +8,22 @@ import AtomicSorter from './AtomicSorter';
 import ElementCatcher from './ElementCatcher';
 import LiquidMixer from './LiquidMixer';
 
-export default function MinigameOverlay() {
+export default function MinigameOverlay({ level = 1 }) {
     const { minigameActive, setMinigameActive } = useGameContext();
     const [loot, setLoot] = useState(null);
+    const [isMenuFlow, setIsMenuFlow] = useState(false);
+
+    useEffect(() => {
+        if (minigameActive) {
+            // If we are currently in menu, or we came from menu, keep flow active
+            if (minigameActive.id === 'menu') {
+                setIsMenuFlow(true);
+            }
+        } else {
+            // Reset flow when entirely closed
+            setIsMenuFlow(false);
+        }
+    }, [minigameActive]);
 
     useEffect(() => {
         const unsub = eventBus.on('minigame:show_rewards', (rewards) => {
@@ -22,19 +35,26 @@ export default function MinigameOverlay() {
     if (!minigameActive) return null;
 
     const games = [
-        { id: 'symbol_matcher', name: 'Symbol Matcher', difficulty: 'ง่าย', desc: 'จับคู่ชื่อธาตุกับสัญลักษณ์' },
-        { id: 'liquid_mixer', name: 'Liquid Mixer', difficulty: 'ง่าย', desc: 'เทสารลงในกระบอกตวงให้ได้ระดับ' },
-        { id: 'element_memory', name: 'Element Memory', difficulty: 'ปานกลาง', desc: 'เกมจับคู่แผ่นปยายเปิดไพ่ธาตุ' },
-        { id: 'element_catcher', name: 'Element Catcher', difficulty: 'ปานกลาง', desc: 'เก็บธาตุที่ตกลงมาใส่ตะกร้า' },
-        { id: 'atomic_sorter', name: 'Atomic Sorter', difficulty: 'ยาก', desc: 'เรียงลำดับธาตุตามเลขอะตอม' },
+        { id: 'symbol_matcher', name: 'Symbol Matcher', difficulty: 'ง่าย', desc: 'จับคู่ชื่อธาตุกับสัญลักษณ์', minLevel: 1 },
+        { id: 'liquid_mixer', name: 'Liquid Mixer', difficulty: 'ง่าย', desc: 'เทสารลงในกระบอกตวงให้ได้ระดับ', minLevel: 1 },
+        { id: 'element_memory', name: 'Element Memory', difficulty: 'ปานกลาง', desc: 'เกมจับคู่แผ่นปยายเปิดไพ่ธาตุ', minLevel: 5 },
+        { id: 'element_catcher', name: 'Element Catcher', difficulty: 'ปานกลาง', desc: 'เก็บธาตุที่ตกลงมาใส่ตะกร้า', minLevel: 5 },
+        { id: 'atomic_sorter', name: 'Atomic Sorter', difficulty: 'ยาก', desc: 'เรียงลำดับธาตุตามเลขอะตอม', minLevel: 10 },
     ];
 
     const handleSelectGame = (gameId) => {
+        const game = games.find(g => g.id === gameId);
+        if (game && level < game.minLevel) return;
         setMinigameActive({ id: gameId });
     };
 
     const handleGameComplete = () => {
-        setMinigameActive({ id: 'menu' });
+        if (isMenuFlow) {
+            setMinigameActive({ id: 'menu' });
+        } else {
+            // Direct start logic: Close app completely
+            setMinigameActive(null);
+        }
     };
 
     const handleClose = () => {
@@ -53,37 +73,61 @@ export default function MinigameOverlay() {
                     <div className="minigame-content">
                         {minigameActive.id === 'menu' ? (
                             <div className="minigame-list">
-                                {games.map(game => (
-                                    <div key={game.id} className="minigame-item" onClick={() => handleSelectGame(game.id)}>
-                                        <div className="minigame-info">
-                                            <div className="minigame-name">{game.name}</div>
-                                            <div className="minigame-desc">{game.desc}</div>
+                                {games.map(game => {
+                                    const isLocked = level < game.minLevel;
+                                    return (
+                                        <div 
+                                            key={game.id} 
+                                            className={`minigame-item ${isLocked ? 'locked' : ''}`} 
+                                            onClick={() => handleSelectGame(game.id)}
+                                        >
+                                            <div className="minigame-info">
+                                                <div className="minigame-name">
+                                                    {game.name} {isLocked && <span className="lock-icon">🔒</span>}
+                                                </div>
+                                                <div className="minigame-desc">{isLocked ? `ต้องการเลเวล ${game.minLevel} เพื่อเข้าเล่น` : game.desc}</div>
+                                            </div>
+                                            <div className={`minigame-difficulty ${game.difficulty === 'ง่าย' ? 'easy' : game.difficulty === 'ปานกลาง' ? 'med' : 'hard'}`}>
+                                                {isLocked ? `LV. ${game.minLevel}` : game.difficulty}
+                                            </div>
                                         </div>
-                                        <div className={`minigame-difficulty ${game.difficulty === 'ง่าย' ? 'easy' : game.difficulty === 'ปานกลาง' ? 'med' : 'hard'}`}>
-                                            {game.difficulty}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
-                            /* Render Games */
-                            minigameActive.id === 'symbol_matcher' ? (
-                                <SymbolMatcher onComplete={handleGameComplete} />
-                            ) : minigameActive.id === 'element_memory' ? (
-                                <ElementMemory onComplete={handleGameComplete} />
-                            ) : minigameActive.id === 'atomic_sorter' ? (
-                                <AtomicSorter onComplete={handleGameComplete} />
-                            ) : minigameActive.id === 'element_catcher' ? (
-                                <ElementCatcher onComplete={handleGameComplete} />
-                            ) : minigameActive.id === 'liquid_mixer' ? (
-                                <LiquidMixer onComplete={handleGameComplete} />
-                            ) : (
-                                <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
-                                    การทดสอบนี้ยังไม่พร้อมใช้งาน...
-                                    <br />
-                                    <button className="mg-btn primary" style={{ marginTop: '20px' }} onClick={() => setMinigameActive({ id: 'menu' })}>กลับหน้าหลัก</button>
-                                </div>
-                            )
+                            /* Render Games with Level Guard */
+                            (() => {
+                                const activeGame = games.find(g => g.id === minigameActive.id);
+                                if (activeGame && level < activeGame.minLevel) {
+                                    return (
+                                        <div className="mg-lock-screen">
+                                            <div className="lock-large-icon">🔒</div>
+                                            <h3>การวิจัยถูกระงับ</h3>
+                                            <p>เจ้าต้องมีระดับเลเวลอย่างน้อย <strong>{activeGame.minLevel}</strong> เพื่อเข้าถึงส่วนนี้</p>
+                                            <div className="current-lv-tag">ระดับปัจจุบันของเจ้า: {level}</div>
+                                            <button className="mg-btn primary" onClick={() => setMinigameActive({ id: 'menu' })}>กลับหน้าเมนู</button>
+                                        </div>
+                                    );
+                                }
+
+                                return minigameActive.id === 'symbol_matcher' ? (
+                                    <SymbolMatcher onComplete={handleGameComplete} />
+                                ) : minigameActive.id === 'element_memory' ? (
+                                    <ElementMemory onComplete={handleGameComplete} />
+                                ) : minigameActive.id === 'atomic_sorter' ? (
+                                    <AtomicSorter onComplete={handleGameComplete} />
+                                ) : minigameActive.id === 'element_catcher' ? (
+                                    <ElementCatcher onComplete={handleGameComplete} />
+                                ) : minigameActive.id === 'liquid_mixer' ? (
+                                    <LiquidMixer onComplete={handleGameComplete} />
+                                ) : (
+                                    <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+                                        การทดสอบนี้ยังไม่พร้อมใช้งาน...
+                                        <br />
+                                        <button className="mg-btn primary" style={{ marginTop: '20px' }} onClick={() => setMinigameActive({ id: 'menu' })}>กลับหน้าหลัก</button>
+                                    </div>
+                                );
+                            })()
                         )}
                     </div>
 
@@ -143,7 +187,11 @@ export default function MinigameOverlay() {
 
                             <button className="loot-collect-btn" onClick={() => {
                                 setLoot(null);
-                                setMinigameActive({ id: 'menu' });
+                                if (isMenuFlow) {
+                                    setMinigameActive({ id: 'menu' });
+                                } else {
+                                    setMinigameActive(null);
+                                }
                             }}>
                                 สะสมของรางวัล
                             </button>
@@ -275,6 +323,26 @@ export default function MinigameOverlay() {
                     transform: translateX(5px);
                 }
 
+                .minigame-item.locked {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    filter: grayscale(100%);
+                    border-color: rgba(255, 255, 255, 0.1);
+                    background: rgba(255, 255, 255, 0.02);
+                }
+
+                .minigame-item.locked:hover {
+                    transform: none;
+                    background: rgba(255, 255, 255, 0.02);
+                    border-color: rgba(255, 255, 255, 0.1);
+                }
+
+                .lock-icon {
+                    font-size: 0.8rem;
+                    margin-left: 8px;
+                    opacity: 0.7;
+                }
+
                 .minigame-name {
                     font-weight: bold;
                     font-size: 1.1rem;
@@ -328,6 +396,48 @@ export default function MinigameOverlay() {
                     border-radius: 6px;
                     font-weight: bold;
                     cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .mg-btn.primary:hover {
+                    background: #fff;
+                    transform: translateY(-2px);
+                }
+
+                /* Lock Screen Style */
+                .mg-lock-screen {
+                    padding: 60px 40px;
+                    text-align: center;
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 16px;
+                    animation: lockPulse 2s infinite ease-in-out;
+                }
+                .lock-large-icon {
+                    font-size: 4rem;
+                    margin-bottom: 20px;
+                    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));
+                }
+                .mg-lock-screen h3 {
+                    color: #f87171;
+                    font-size: 1.5rem;
+                    margin-bottom: 12px;
+                }
+                .mg-lock-screen p {
+                    color: #94a3b8;
+                    margin-bottom: 24px;
+                }
+                .current-lv-tag {
+                    display: inline-block;
+                    padding: 6px 16px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    color: #00f2ff;
+                    margin-bottom: 30px;
+                }
+                @keyframes lockPulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.8; }
                 }
 
                 /* Loot Modal Styling */
@@ -416,9 +526,9 @@ export default function MinigameOverlay() {
                 .reward-element.common { border-color: #64748b; }
                 .reward-element.uncommon { border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
                 .reward-element.rare { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
-                .reward-element.legendary { border-color: #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); animation: legendaryPulse 2s infinite; }
+                .reward-element.epic { border-color: #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); animation: epicPulse 2s infinite; }
                 
-                @keyframes legendaryPulse {
+                @keyframes epicPulse {
                     0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
                     50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.6); }
                 }
@@ -435,7 +545,7 @@ export default function MinigameOverlay() {
                 .common .rarity-dot { background: #64748b; }
                 .uncommon .rarity-dot { background: #22c55e; }
                 .rare .rarity-dot { background: #3b82f6; }
-                .legendary .rarity-dot { background: #a855f7; }
+                .epic .rarity-dot { background: #a855f7; }
 
                 .loot-collect-btn {
                     width: 100%; padding: 16px;
